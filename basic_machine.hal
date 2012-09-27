@@ -1,0 +1,35 @@
+
+
+#loadrt hostmot2
+loadrt hostmot2 debug_idrom=1 debug_module_descriptors=1 debug_pin_descriptors=1 debug_modules=1
+
+#WR compiled firware
+loadrt hm2_pci config="firmware=hm2/5i20/2X7I65_72.BIT num_encoders=0 num_pwmgens=0 num_stepgens=0 num_bspis=1"
+#Mesa Firmware 30Aug
+# loadrt hm2_pci config="firmware=hm2/5i20/7i65x2.bit num_encoders=0 num_pwmgens=0 num_stepgens=0 num_bspis=1"
+
+#loadrt mesa_7i65 "bspi_chans=hm2_5i20.0.bspi.0, hm2_5i20.0.bspi.1"
+#loadrt mesa_7i65 bspi_chans=hm2_5i20.0.bspi.0
+
+loadrt threads name1=test period1=1000000
+
+addf hm2_5i20.0.read          test
+addf hm2_5i20.0.write         test
+addf hm2_5i20.0.pet_watchdog  test
+
+start
+
+# load in out machine controller
+loadusr /home/user/linuxcnc/configs/test_area/machine.py
+
+# define mapping for IO board, to make life easier
+
+ setp hm2_5i20.0.gpio.047.is_output 0
+# net IO.0 hm2_5i20.0.gpio.047.in efmachine.mcb1
+
+# setp hm2_5i20.0.gpio.047.out 0
+# setp hm2_5i20.0.gpio.046.out 0
+# setp hm2_5i20.0.gpio.045.out 0
+# setp hm2_5i20.0.gpio.044.out 0
+
+

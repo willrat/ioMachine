@@ -1,0 +1,39 @@
+loadrt hostmot2 debug_idrom=1 debug_module_descriptors=1 debug_pin_descriptors=1 debug_modules=1
+#loadrt hostmot2
+
+#loadrt hm2_pci config="firmware=hm2/5i20/SVST2_8.BIT num_encoders=0 num_pwmgens=0 num_stepgens=0 num_bspis=4"
+#loadrt hm2_pci config="firmware=hm2/5i20/SVTP6_7I39.BIT num_encoders=0 num_pwmgens=0 num_stepgens=0 num_bspis=4"
+loadrt hm2_pci config="firmware=hm2/5i20/2X7I65_72.BIT num_encoders=8 num_pwmgens=0 num_stepgens=0 num_bspis=1"
+
+#loadrt mesa_7i65 "bspi_chans=hm2_5i20.0.bspi.0, hm2_5i20.0.bspi.1"
+#loadrt mesa_7i65 bspi_chans=hm2_5i20.0.bspi.0
+
+
+loadrt threads name1=test period1=1000000
+
+addf hm2_5i20.0.read          test
+addf hm2_5i20.0.write         test
+addf hm2_5i20.0.pet_watchdog  test
+       
+#addf mesa_7i65.read							test
+start
+
+setp hm2_5i20.0.gpio.047.is_output 1
+setp hm2_5i20.0.gpio.046.is_output 1
+setp hm2_5i20.0.gpio.045.is_output 1
+setp hm2_5i20.0.gpio.044.is_output 1
+
+setp hm2_5i20.0.gpio.047.out 0
+setp hm2_5i20.0.gpio.046.out 0
+setp hm2_5i20.0.gpio.045.out 0
+setp hm2_5i20.0.gpio.044.out 0
+
+# setp mesa-7i65.0.analogue.0.out 0.8
+# setp mesa-7i65.0.analogue.1.out 0.8
+# setp mesa-7i65.0.analogue.2.out 0.8
+# setp mesa-7i65.0.analogue.3.out 0.8
+# setp mesa-7i65.0.analogue.4.out 0.8
+# setp mesa-7i65.0.analogue.5.out 0.8
+# setp mesa-7i65.0.analogue.6.out 0.8
+# setp mesa-7i65.0.analogue.7.out 0.8
+
