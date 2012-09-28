@@ -265,7 +265,7 @@ net mesa-7i65.ldac    hm2_5i20.0.gpio.021.out
 net mesa-7i65.enable  hm2_5i20.0.gpio.022.out
 net mesa-7i65.reset   hm2_5i20.0.gpio.023.out
 
-show pin hmi
+#show pin hmi
 
 # start
 

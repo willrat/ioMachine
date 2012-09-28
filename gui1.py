@@ -50,8 +50,14 @@ class hmi(object):
     print "on_viceOpenToggle_toggled"
     if widget.get_active:
       print "widget is active"
+
+      #test
+      book = self.builder.get_object("notebook1")
+      book.set_show_tabs(False)
+
     else:
       print "widget is not active"
+
 
     if self.viceCloseToggle:
       if self.viceOpenToggle.get_active():
@@ -64,7 +70,10 @@ class hmi(object):
     print "on_viceCloseToggle_toggled"
     if self.viceOpenToggle:
       if self.viceCloseToggle.get_active():
-        self.viceOpenToggle.set_active(False)      
+        self.viceOpenToggle.set_active(False)
+
+        book = self.builder.get_object("notebook1")
+        book.set_show_tabs(True)
 
     else:
       print "no viceOpenToggle"
@@ -108,81 +117,94 @@ class hmi(object):
       #   print "postiton %s" % item
 
   def on_notebook1_select_page(self, notebook, page, page_num, data=None):
-    print "call back"
+    print "SELECT PAGE"
 
   def on_notebook1_switch_page(self, notebook, page, page_num, data=None):
-    print "switch page call back"
+    print "SWITCH PAGE call back"
     print "page number %s" % page_num
 
+    # has this been incremented yet?
+    currentPage = notebook.get_current_page()
+    print "current page is %s " % currentPage
+
+
+
+    # lets say for example that we don't want to allow to leave the auto page...
+    # or the new page should not be accessible
+    if currentPage == 0:
+      #notebook.set_current_page(0)
+      page = notebook.get_nth_page(page_num)
+      page.set_sensitive(False)
+      return True
+
+    # look at the requested page number
     if page_num == 0:
       print "auto mode"
+      h['manualRequest'] = 0
+
+      #lets say for example that we don't want to transition out of auto.....
+
     elif page_num == 1:
       print "manual"
-    elif page_num == 2:
+      h['manualRequest'] = 1
 
-  def updatePositonReadout(self):
+    elif page_num == 2:
+      print "program options page"
+      h['manualRequest'] = 0
+
+  def createProgram(self):
+    startPositonX = 70
+    startPositonY = 0
+
+    programString = ""
+    programString += ";rapid to safe position"
+    programString += "G0 X100\n"
+    
+    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+
+
+    
+    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+
+
+
+    print programString
+
+  def udpateControls(self):
+
+    # update the positon display
     if self.status:
       self.status.poll()
-      #positionText = 'Z: {0} X: {1}'.format(self.status.actual_position[0], self.status.actual_position[1])
       positionText = 'Z: % 2.2f X: % 2.2f' % (self.status.actual_position[0], self.status.actual_position[1])
-      # data = self.status.actual_position[0]
-      # text1 = "% 2.2f"% (data)
-      # data = self.status.actual_position[1]
-      # text2 = "% 2.2f"% (data)
-      #self.builder.get_object("dro_x").set_text(text)
-      #
+
       self.positionLabel = self.builder.get_object("positionLabel1")
       if self.positionLabel:
         self.positionLabel.set_text(positionText)
 
+    # update current state    
     label = self.builder.get_object("stateLabel")
+    if states[h['currentState']] and label:
+      label.set_text(self.stateMachine.currentState)
+    elif label:
+      label.set_text("cannot get machine state")
 
-    # if self.stateMachine and label:
-    #   label.set_text(self.stateMachine.currentState)
-    # elif label:
-    #   label.set_text("cannot get machine state")
+    # TODO: Read if jog OK
+    if True:
+      jogButtonBox = self.builder.get_object("jogButtonBox")
+      if jogButtonBox:
+        jogButtonBox.set_sensitive(False)
+
 
     return True
 
   def on_manual_show(self, widget, data=None):
     print "on manualWindow show"
 
-  # def theEnd(self):
-  #   gtk.main_quit()
-  #   self.positionUpdateThread.cancel()
-
-
-
-# enum states {   STATE_STANDBY = 0,
-#                 STATE_READY,
-#                 STATE_CLOSEVICE,
-#                 STATE_STARTSPINDLE,
-#                 STATE_CYCLE,
-#                 STATE_OPENVICE,
-#                 STATE_MANUAL,
-#                 MAX_STATES }; //current_state;
-
   # must match order as above
-  states = [  "READY",
-              "STANDBY",
-              "CLOSEVICE",
-              "MANUAL",
-              "STARTSPINDLE",
-              "CYCLE",
-              "OPENVICE",
-              "MANUAL"]
-
   #def __init__(self, halComponent=None, stateMachine=None):
   def __init__(self, stateMachine=None):
     self.builder = gtk.Builder()
     self.builder.add_from_file("gui1.glade")
-
-    # hal stuff
-    # if not halComponent:      
-    #   halComponent = hal.component("gui01")
-    # else:
-    #   panel = gladevcp.makepins.GladePanel( halComponent, "gui1.glade", self.builder, None)
-    #   halComponent.ready()
 
 
     settings = gtk.settings_get_default()
@@ -192,6 +214,8 @@ class hmi(object):
     self.window1 = self.builder.get_object("window1")
     #self.window1.fullscreen()
     self.window1.show()
+
+    #self.builder.get_object("window2").show()
 
     self.manualWindow = self.builder.get_object("manual")
     #self.manualWindow.show()
@@ -207,8 +231,8 @@ class hmi(object):
     self.command = emc.command()
     self.status = emc.stat()
 
-    # udpate positon readout
-    gobject.timeout_add(100, self.updatePositonReadout) 
+    # udpate display and button states
+    gobject.timeout_add(100, self.udpateControls) 
 
     # thread to udpate positon readout in realtime
     # self.positionUpdateThread = UpdateLabel(self)
@@ -223,8 +247,26 @@ class hmi(object):
     printHalPins()
     print "-------------------------------------------"
     panel = gladevcp.makepins.GladePanel( h, "gui1.glade", self.builder, None)
-    # h.ready()
-    
+    h.ready()
+    self.createProgram()
+
+# enum states {   STATE_STANDBY = 0,
+#                 STATE_READY,
+#                 STATE_CLOSEVICE,
+#                 STATE_STARTSPINDLE,
+#                 STATE_CYCLE,
+#                 STATE_OPENVICE,
+#                 STATE_MANUAL,
+#                 MAX_STATES }; //current_state;
+
+states = [  "READY",
+            "STANDBY",
+            "CLOSEVICE",
+            "MANUAL",
+            "STARTSPINDLE",
+            "CYCLE",
+            "OPENVICE",
+            "MANUAL"]
 
 
 
@@ -244,17 +286,19 @@ def printHalPins():
 #     while 1:
 #       time.sleep(0.05)
 #       if self.gui:
-#         self.gui.updatePositonReadout()
+#         self.gui.udpateControls()
+
+h = hal.component("hmi")
+h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
+h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
+h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
+h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
 
 
 
 if __name__ == "__main__":
   try:
-    h = hal.component("hmi")
-    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
-    h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
-
-    h.ready()
+    
 
     printHalPins()
 
