@@ -12,6 +12,11 @@ import hal
 import emc
 import os
 
+class motionControlProgram():
+  def __init__(self):
+    print "init motionControlProgram"
+
+
 class hmi(object):
 
   def on_window1_destroy(self, widget, data=None):
@@ -152,19 +157,49 @@ class hmi(object):
       print "program options page"
       h['manualRequest'] = 0
 
+  def on_button1_released(self, widget, data=None):
+    self.loadMotionControlProgram()
+
+  def loadMotionControlProgram(self):
+    if self.command:
+      self.command.mode(emc.MODE_AUTO)
+      self.command.wait_complete()
+      self.command.program_open("/tmp/MotionProgram.ngc")
+
   def createProgram(self):
+
     startPositonX = 70
     startPositonY = 0
+    positionToTubeY = 8
+    positionToTubeFeed = 150
+    formingPositionY = 12
+    formingFeed = 25
+    formingDwell = 1
+    tubeStopPositionX = 80
+    tubeStopPositionY = 0
 
     programString = ""
-    programString += ";rapid to safe position"
+    programString += ";rapid to safe position\n"
+    programString += "G0 Y0\n"
     programString += "G0 X100\n"
-    
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
 
-
-    
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+    programString += "M3 S200\n"
+
+    programString += "G1 Y %2.2f F %2.2f \n" % (positionToTubeY, positionToTubeFeed)
+    programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
+    programString += "G4 P %2.2f \n" % (formingDwell)
+
+    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+    programString += "M4 S200\n "
+    programString += "G1 X %2.2f Y %2.2f F1000\n" % (tubeStopPositionX, tubeStopPositionY)
+    programString += "M30\n"
+    
+    #programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+
+    f = open('/tmp/MotionProgram.ngc', 'w')
+    f.write(programString)
+    f.close()
 
 
 
@@ -234,21 +269,22 @@ class hmi(object):
     # udpate display and button states
     gobject.timeout_add(100, self.udpateControls) 
 
-    # thread to udpate positon readout in realtime
-    # self.positionUpdateThread = UpdateLabel(self)
-    # self.positionUpdateThread.start()
+    self.scrolledWindow = self.builder.get_object("scrolledWindow1")
+    self.listStore = self.builder.get_object("listStore1")
 
-    # #
-    # if stateMachine:
-    #   self.stateMachine = stateMachine
+    treeView = gtk.TreeView(self.listStore)
+    #treeView.connect("row-activated", self.on_activated)
+    treeView.set_rules_hint(True)
+    self.scrolledWindow.add(treeView)
 
-    # h = hal.component("hmi")
-    print "-------------------------------------------"
-    printHalPins()
-    print "-------------------------------------------"
-    panel = gladevcp.makepins.GladePanel( h, "gui1.glade", self.builder, None)
-    h.ready()
-    self.createProgram()
+    # check for hal
+    if h:
+      print "-------------------------------------------"
+      printHalPins()
+      print "-------------------------------------------"
+      panel = gladevcp.makepins.GladePanel( h, "gui1.glade", self.builder, None)
+      h.ready()
+      self.createProgram()
 
 # enum states {   STATE_STANDBY = 0,
 #                 STATE_READY,
@@ -288,20 +324,18 @@ def printHalPins():
 #       if self.gui:
 #         self.gui.udpateControls()
 
-h = hal.component("hmi")
-h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
-h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
-h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
-h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
-
+try:
+  h = hal.component("hmi")
+  h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
+  h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
+  h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
+  h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
+except:
+  print "hal not found on system"
 
 
 if __name__ == "__main__":
-  try:
-    
-
-    printHalPins()
-
+  try:    
     app = hmi()
     gtk.main()
 

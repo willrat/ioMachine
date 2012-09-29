@@ -147,7 +147,19 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="button1">
+                <property name="label" translatable="yes">tempLoad</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="released" handler="on_button1_released"/>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="right_attach">3</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
             </child>
             <child>
               <placeholder/>
@@ -478,13 +490,15 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTreeView" id="treeview1">
+          <object class="GtkScrolledWindow" id="scrolledwindow1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="model">liststore1</property>
-            <property name="search_column">1</property>
-            <property name="enable_grid_lines">both</property>
-            <property name="enable_tree_lines">True</property>
+            <property name="vadjustment">adjustment1</property>
+            <property name="hscrollbar_policy">automatic</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <child>
+              <placeholder/>
+            </child>
           </object>
           <packing>
             <property name="position">3</property>
@@ -524,7 +538,6 @@
                 <property name="active">True</property>
                 <property name="draw_indicator">False</property>
                 <signal name="toggled" handler="on_radiobutton1_toggled"/>
-                <signal name="group_changed" handler="on_radiobutton1_group_changed"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -557,7 +570,6 @@
                 <property name="active">True</property>
                 <property name="draw_indicator">False</property>
                 <property name="group">radiobutton1</property>
-                <signal name="group_changed" handler="on_radiobutton3_group_changed"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -590,105 +602,90 @@
     </child>
   </object>
   <object class="GtkWindow" id="window3">
+    <property name="window_position">center-always</property>
+    <property name="default_width">1000</property>
+    <property name="default_height">700</property>
     <child>
-      <object class="GtkTable" id="table3">
+      <placeholder/>
+    </child>
+  </object>
+  <object class="GtkDialog" id="dialog1">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <property name="has_separator">False</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
-        <property name="n_rows">7</property>
-        <property name="n_columns">3</property>
+        <property name="spacing">2</property>
         <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <object class="GtkEntry" id="entry1">
+          <object class="GtkNotebook" id="notebook2">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="invisible_char">&#x25CF;</property>
+            <child>
+              <object class="EMC_SourceView" id="hal_sourceview1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="left_margin">2</property>
+                <property name="right_margin">2</property>
+                <property name="show_line_numbers">True</property>
+                <property name="show_line_marks">True</property>
+                <property name="tab_width">4</property>
+                <property name="auto_indent">True</property>
+                <property name="highlight_current_line">True</property>
+                <property name="indent_on_tab">False</property>
+              </object>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="label5">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">page 1</property>
+              </object>
+              <packing>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="label11">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">page 3</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
           </object>
           <packing>
-            <property name="left_attach">1</property>
-            <property name="right_attach">2</property>
-            <property name="top_attach">1</property>
-            <property name="bottom_attach">2</property>
+            <property name="position">1</property>
           </packing>
         </child>
-        <child>
-          <object class="GtkEntry" id="entry2">
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="invisible_char">&#x25CF;</property>
+            <property name="layout_style">end</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
           </object>
           <packing>
-            <property name="left_attach">1</property>
-            <property name="right_attach">2</property>
-            <property name="top_attach">2</property>
-            <property name="bottom_attach">3</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkEntry" id="entry3">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="invisible_char">&#x25CF;</property>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="right_attach">2</property>
-            <property name="top_attach">3</property>
-            <property name="bottom_attach">4</property>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">10</property>
   </object>
 </interface>
