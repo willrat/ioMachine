@@ -19,9 +19,20 @@ class motionControlProgram():
     print "init motionControlProgram"
 
     # these are the default values
-    self.program =  [(_('Program Name'), 'default_program'), \
-                    (_('Start Position X'), 25), \
-                    (_('start Position Y'), 0), \
+#    self.program = [(_('Program Name'), 'default_program'), \
+#                    (_('Start Position X'), 25), \
+#                    (_('start Position Y'), 0), \
+#                    (_('Position To Tube Y'), 0), \
+#                    (_('Position To Tube Feed'), 250), \
+#                    (_('Forming Position Y'), 0), \
+#                    (_('Forming Feed'), 50), \
+#                    (_('Forming Dwell'), 1), \
+#                    (_('Tube Stop Position X'), 25), \
+#                    (_('Tube Stop Position Y'), 5) ]
+
+    self.program = [(_('Program Name'), 'default_program'), \
+                    (_('Forming Start Position X'), 90), \
+                    (_('Forming Start Position Y'), 0), \
                     (_('Position To Tube Y'), 0), \
                     (_('Position To Tube Feed'), 250), \
                     (_('Forming Position Y'), 0), \
@@ -63,8 +74,6 @@ class hmi(object):
   # load created text program into emc
   def loadMotionControlProgram(self):
     if self.command:
-      #self.command.state(emc.STATE_ON)
-      #self.command.wait_complete()
       self.command.mode(emc.MODE_MDI)
       self.command.wait_complete()
       self.command.mode(emc.MODE_AUTO)
@@ -74,10 +83,7 @@ class hmi(object):
       self.command.program_open("/tmp/MotionProgram.ngc")
       
       self.builder.get_object("hal_gremlin1").load("/tmp/MotionProgram.ngc")
-      
-#      self.command.wait_complete()
-      #self.command.state(emc.STATE_OFF)
-      
+         
       if self.verbose:
           print "LOAD: Done Load command issue"
       
@@ -94,6 +100,12 @@ class hmi(object):
     formingDwell = float(self.currentProgram[7][1])
     tubeStopPositionX = float(self.currentProgram[8][1])
     tubeStopPositionY = float(self.currentProgram[9][1])
+
+    # logic checking
+    if positionToTubeY > formingPositionY:
+        positionToTubeY = 0
+
+
 
     programString = ""
     programString += "; program for %s\n" % (programName)
@@ -233,44 +245,57 @@ class hmi(object):
 #  def on_notebook1_select_page(self, notebook, page, page_num, data=None):
 #    print "SELECT PAGE"
 
+  def pollConnections(self):
+    self.currentStateString = states[h['currentState']]
+     
+    if currentStateString == "MANUAL":
+      print "current state is manual; set sensitivity appropriately"
+    elif currenStateString in cycleStates:
+      print "current state is inCycle"
+    else:
+      print "either in standby or in ready"
+
+    return True
+
+  def setNonAutoPagesInactive(self):
+    notebook = self.builder.get_object("notebook1")
+    
+    for pageNumber in [1,2,3]:
+      page = notebook.get_nth_page(pageNumber)
+      if page:
+        page.set_sensitive(False)
+    
+  def setPagesActive(self):
+    notebook = self.builder.get_object("notebook1")
+    
+    for pageNumber in range(4):
+      page = notebook.get_nth_page(pageNumber)
+      if page:
+        page.set_sensitive(True)
+
   def on_notebook1_switch_page(self, notebook, page, page_num, data=None):
     print "SWITCH PAGE call back"
 
-    # has this been incremented yet?
     currentPage = notebook.get_current_page()
     print "Switching to page: %s" % page_num
     print "Current page is:   %s" % currentPage
 
-    #
-    #   TODO: Here we will control what pages are enabled to dis-allow operator
-    #         to select the wrong thing
-    #
-
-    # lets say for example that we don't want to allow to leave the auto page...
-    # or the new page should not be accessible
+    # set the manual request flag to the machine controller    
+    if currentPage == 1:
+        h['manualRequest'] = 0
+    elif page_num == 1:
+        h['manualRequest'] = 1
+        
+    # in auto mode page
     if currentPage == 0:
-      
-      page = notebook.get_nth_page(page_num)
-      #page.set_sensitive(False)
+      if self.currentStateString in cycleStates:
+        #setPagesActive()
+        self.setNonAutoPagesInactive()
+      else:
+        self.setPagesActive()
+        
       return
 
-    # look at the requested page number
-    if page_num == 0:
-      print "auto mode"
-      h['manualRequest'] = 0
-
-      #lets say for example that we don't want to transition out of auto.....
-
-    elif page_num == 1:
-      print "manual"
-      h['manualRequest'] = 1
-
-    elif page_num == 2:
-      print "program options page"
-      h['manualRequest'] = 0
-
-#  def on_button1_released(self, widget, data=None):
-#    self.loadMotionControlProgram()
 
   def on_treeview1_row_activated(self, widget, row, col):
     print "row double click"
@@ -439,12 +464,6 @@ class hmi(object):
     self.entryNumeric.set_text("")
     self.numKeyWindow.iconify()
 
-  #def on_entry-numeric_insert_text(self):
-    
-  # validate the input text  
-  def on_entry_numeric_insert_text(self, editable, new_text, new_text_length, position, data=None):
-    pass
-
   #
   #  init etc...
   #
@@ -499,14 +518,9 @@ class hmi(object):
     self.programListStore = self.builder.get_object("liststore2")
     self.programListStore.clear()
     
-    self.motionTester.fillListStore(self.programListStore)
+    self.motionTester.fillListStore(self.programListStore)    
 
     #self.programDialog.show()
-
-  # def createDummyEntries(self):
-  #   for i in range(10):
-  #     string = "program %s" % i
-  #     self.listStore.append((str)string)
 
   
   def initNumericKeyboard(self):
@@ -573,15 +587,18 @@ class hmi(object):
     
     self.command = emc.command()
     self.status = emc.stat()
-
+    
+    # TODO: 
+    #self.createProgram2()
+    
     # check for hal
-    if h:
+    #if h:
       #print "-------------------------------------------"
       #printHalPins()
       #print "-------------------------------------------"
-      panel = gladevcp.makepins.GladePanel(h, "gui1.glade", self.builder, None)
-      h.ready()
-      self.createProgram2()
+      #panel = gladevcp.makepins.GladePanel(h, "gui1.glade", self.builder, None)
+      #h.ready()
+      
 
 # enum states {   STATE_STANDBY = 0,
 #                 STATE_READY,
@@ -592,16 +609,35 @@ class hmi(object):
 #                 STATE_MANUAL,
 #                 MAX_STATES }; //current_state;
 
-states = [  "READY",
-            "STANDBY",
+states = [  "STANDBY",
+            "READY",
             "CLOSEVICE",
-            "MANUAL",
             "STARTSPINDLE",
             "CYCLE",
             "OPENVICE",
             "MANUAL"]
 
+stateText = [   _("Standby"),
+                _("Ready"),
+                _("Close Vice"),
+                _("Start Spindle"),
+                _("Cycle"),
+                _("Open Vice"),
+                _("Manual")]
 
+stateTextVerbose = [    _("Standby - Press start"),
+                        _("Ready - Hold control for cycle"),
+                        _("Close Vice - Hold control to close vice"),
+                        _("Start Spindle"),
+                        _("Cycle - Forming tube"),
+                        _("Open Vice - Hold control to open vice"),
+                        _("Manual")]
+
+# when we are in any of these states we are in a cycle
+cycleStates = [ "CLOSEVICE",
+                "STARTSPINDLE",
+                "CYCLE",
+                "OPENVICE"]
 
 def printHalPins():
   #res = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-i", vars.emcini.get(), "-f", postgui_halfile])
@@ -614,10 +650,12 @@ try:
   h = hal.component("hmi")
   h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
   h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
+  
   h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
   h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
+  h.ready()
 except:
-  print "hal not found on system"
+  print "hal exception"
 
 
 if __name__ == "__main__":
@@ -627,4 +665,3 @@ if __name__ == "__main__":
 
   except KeyboardInterrupt:
     raise SystemExit
-

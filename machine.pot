@@ -1,0 +1,201 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-10-04 22:15+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: gui1.py:33
+msgid "Program Name"
+msgstr ""
+
+#: gui1.py:34
+msgid "Forming Start Position X"
+msgstr ""
+
+#: gui1.py:35
+msgid "Forming Start Position Y"
+msgstr ""
+
+#: gui1.py:36
+msgid "Position To Tube Y"
+msgstr ""
+
+#: gui1.py:37
+msgid "Position To Tube Feed"
+msgstr ""
+
+#: gui1.py:38
+msgid "Forming Position Y"
+msgstr ""
+
+#: gui1.py:39
+msgid "Forming Feed"
+msgstr ""
+
+#: gui1.py:40
+msgid "Forming Dwell"
+msgstr ""
+
+#: gui1.py:41
+msgid "Tube Stop Position X"
+msgstr ""
+
+#: gui1.py:42
+msgid "Tube Stop Position Y"
+msgstr ""
+
+#: gui1.py:327
+msgid "Current Program: "
+msgstr ""
+
+#: gui1.glade:62 gui1.glade:470
+msgid "Current Program Name\n"
+msgstr ""
+
+#: gui1.glade:83
+msgid "CYCLE"
+msgstr ""
+
+#: gui1.glade:98
+msgid "TOOL CHANGE"
+msgstr ""
+
+#: gui1.glade:113
+msgid "STOP POSITION"
+msgstr ""
+
+#: gui1.glade:143
+msgid "EDIT"
+msgstr ""
+
+#: gui1.glade:199
+msgid "AUTO"
+msgstr ""
+
+#: gui1.glade:245
+msgid "Z +"
+msgstr ""
+
+#: gui1.glade:258
+msgid "Z -"
+msgstr ""
+
+#: gui1.glade:271
+msgid "X +"
+msgstr ""
+
+#: gui1.glade:284
+msgid "X -"
+msgstr ""
+
+#: gui1.glade:302
+msgid "<b>Position Jog</b>"
+msgstr ""
+
+#: gui1.glade:326 gui1.glade:409
+msgid "label"
+msgstr ""
+
+#: gui1.glade:334
+msgid "<b>Position</b>"
+msgstr ""
+
+#: gui1.glade:361
+msgid "Vice Open"
+msgstr ""
+
+#: gui1.glade:375
+msgid "Vice Close"
+msgstr ""
+
+#: gui1.glade:394
+msgid "<b>Vice Control</b>"
+msgstr ""
+
+#: gui1.glade:457
+msgid "MANUAL"
+msgstr ""
+
+#: gui1.glade:522
+msgid "New"
+msgstr ""
+
+#: gui1.glade:536
+msgid "Load"
+msgstr ""
+
+#: gui1.glade:564
+msgid "PROGRAM STORE"
+msgstr ""
+
+#: gui1.glade:620
+msgid "SYSTEM"
+msgstr ""
+
+#: gui1.glade:677
+msgid "1"
+msgstr ""
+
+#: gui1.glade:690
+msgid "2"
+msgstr ""
+
+#: gui1.glade:703
+msgid "3"
+msgstr ""
+
+#: gui1.glade:725
+msgid "4"
+msgstr ""
+
+#: gui1.glade:738
+msgid "5"
+msgstr ""
+
+#: gui1.glade:751
+msgid "6"
+msgstr ""
+
+#: gui1.glade:773
+msgid "7"
+msgstr ""
+
+#: gui1.glade:786
+msgid "8"
+msgstr ""
+
+#: gui1.glade:799
+msgid "9"
+msgstr ""
+
+#: gui1.glade:821
+msgid "."
+msgstr ""
+
+#: gui1.glade:834
+msgid "0"
+msgstr ""
+
+#: gui1.glade:847
+msgid "-"
+msgstr ""
+
+#: gui1.glade:972
+msgid "Cancel"
+msgstr ""
+
+#: gui1.glade:986
+msgid "OK"
+msgstr ""

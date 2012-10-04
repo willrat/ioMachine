@@ -1,0 +1,9 @@
+# what would be called POSTGUI...
+
+net currentState 		machine.current_state 		hmi.currentState
+net manualRequest 		machine.requestManual		hmi.manualRequest
+
+     5  bit   OUT         FALSE  hmi.manualRequest
+     5  bit   IN          FALSE  hmi.mcb1
+     5  u32   OUT    0x00000000  hmi.stateRequest
+
