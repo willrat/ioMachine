@@ -18,16 +18,17 @@ class motionControlProgram():
   def __init__(self):
     print "init motionControlProgram"
 
-    self.program =  [(_('Program Name'), 'new_program'), \
-                    (_('Start Position X'), 0), \
+    # these are the default values
+    self.program =  [(_('Program Name'), 'default_program'), \
+                    (_('Start Position X'), 25), \
                     (_('start Position Y'), 0), \
                     (_('Position To Tube Y'), 0), \
-                    (_('Position To Tube Feed'), 0), \
+                    (_('Position To Tube Feed'), 250), \
                     (_('Forming Position Y'), 0), \
-                    (_('Forming Feed'), 0), \
-                    (_('Forming Dwell'), 0), \
-                    (_('Tube Stop Position X'), 0), \
-                    (_('Tube Stop Position Y'), 0) ]
+                    (_('Forming Feed'), 50), \
+                    (_('Forming Dwell'), 1), \
+                    (_('Tube Stop Position X'), 25), \
+                    (_('Tube Stop Position Y'), 5) ]
 
     print self.program
 
@@ -62,48 +63,24 @@ class hmi(object):
   # load created text program into emc
   def loadMotionControlProgram(self):
     if self.command:
+      #self.command.state(emc.STATE_ON)
+      #self.command.wait_complete()
+      self.command.mode(emc.MODE_MDI)
+      self.command.wait_complete()
       self.command.mode(emc.MODE_AUTO)
       self.command.wait_complete()
+      if self.verbose:
+          print "LOAD: Done state prepare"
       self.command.program_open("/tmp/MotionProgram.ngc")
-
-  # create a text program, save to a final
-  def createProgram(self):
-
-    programName = "test program"
-    startPositonX = 70
-    startPositonY = 0
-    positionToTubeY = 8
-    positionToTubeFeed = 150
-    formingPositionY = 12
-    formingFeed = 25
-    formingDwell = 1
-    tubeStopPositionX = 80
-    tubeStopPositionY = 0
-
-    programString = ""
-    programString += ";rapid to safe position\n"
-    programString += "G0 Y0\n"
-    programString += "G0 X100\n"
-
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
-    programString += "M3 S200\n"
-
-    programString += "G1 Y %2.2f F %2.2f \n" % (positionToTubeY, positionToTubeFeed)
-    programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
-    programString += "G4 P %2.2f \n" % (formingDwell)
-
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
-    programString += "M4 S200\n "
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (tubeStopPositionX, tubeStopPositionY)
-    programString += "M30\n"
-    
-    #programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
-
-    f = open('/tmp/MotionProgram.ngc', 'w')
-    f.write(programString)
-    f.close()
-    
-    print programString  
+      
+      self.builder.get_object("hal_gremlin1").load("/tmp/MotionProgram.ngc")
+      
+#      self.command.wait_complete()
+      #self.command.state(emc.STATE_OFF)
+      
+      if self.verbose:
+          print "LOAD: Done Load command issue"
+      
 
   def createProgram2(self):
 
@@ -142,7 +119,10 @@ class hmi(object):
     f.write(programString)
     f.close()
     
-    print programString  
+    print "*****************************"
+    print "Written program"
+    print programString
+    print "*****************************"
 
   #
   #  general application callbacks
@@ -289,8 +269,8 @@ class hmi(object):
       print "program options page"
       h['manualRequest'] = 0
 
-  def on_button1_released(self, widget, data=None):
-    self.loadMotionControlProgram()
+#  def on_button1_released(self, widget, data=None):
+#    self.loadMotionControlProgram()
 
   def on_treeview1_row_activated(self, widget, row, col):
     print "row double click"
@@ -331,7 +311,7 @@ class hmi(object):
     self.builder.get_object("currentProgramLabel").set_text(currentLabelText)
     self.builder.get_object("currentProgramLabel1").set_text(currentLabelText)
     
-    print self.currentProgram[0][1]
+    #print self.currentProgram[0][1]
 
     # update the position display
     if self.status:
@@ -394,20 +374,24 @@ class hmi(object):
     self.programDialog.iconify()
     
   def on_programEditOK_clicked(self, button):
-    print "accept edited program"
+    print "accept edited program"  
     
 #    for item in self.listStore:
 #        print item
     self.currentProgram = []
     
     for i, item in enumerate(self.programListStore):
-        print [item[0], item[1]]
+        print "transfer: %s" % [item[0], item[1]]
         self.currentProgram.append([item[0], item[1]])
 
-    # 
+    #
+#    print "current program is now:"
+#    for line in self.currentProgram: 
+#        print line
+    
     self.createProgram2()
     self.loadMotionControlProgram()
-            
+    self.builder.get_object("hal_gremlin1").expose()        
     self.programDialog.iconify()
     
 
@@ -471,10 +455,11 @@ class hmi(object):
 
 
     settings = gtk.settings_get_default()
-    settings.set_string_property("gtk-font-name", "Sans 20", "")
+    settings.set_string_property("gtk-font-name", "Sans 16", "")
 
     self.builder.connect_signals(self)
     self.window1 = self.builder.get_object("window1")
+    
     #self.window1.fullscreen()
     self.window1.show()
 
@@ -532,11 +517,11 @@ class hmi(object):
     buttons = range(10)
     buttons.append("minus")
     buttons.append("dot")
-    print buttons
+    #print buttons
     
     for button in buttons:
       string = "button-%s" % button 
-      print string 
+      #print string 
       item = self.builder.get_object(string)
       item.connect("clicked", self.on_keyboard_button_press)
     
@@ -545,6 +530,9 @@ class hmi(object):
   
   def __init__(self, stateMachine=None):
 
+    #self.FINAL = False
+    self.verbose = True
+    
     # create a test program
     self.motionTester = motionControlProgram()
     print self.motionTester

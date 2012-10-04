@@ -191,15 +191,6 @@ class MotionHandler():
 			command.auto(emc.AUTO_RUN, 0)
 			self.newState("WAITCOMPLETE")
 
-	def waitForCompletion(self):
-		if self.entry:
-			self.entry = False
-
-		status.poll()
-
-		if status.task_mode == emc.MODE_MANUAL \
-		and status.state == emc.RCS_DONE:
-			self.newState("FINAL")
 
 	def motion(self):
 		# global status
@@ -258,6 +249,21 @@ class MotionHandler():
 
 		# else: print "Not in MDI Mode"
 
+	def waitForCompletion(self):
+		if self.entry:
+			self.entry = False
+
+		status.poll()
+
+		#something has gone wrong so abort
+		if h['enableMotion'] == 0:
+			command.state(emc.STATE_OFF)
+			command.wait_complete()
+			self.newState("FINAL")
+            
+		if status.task_mode == emc.MODE_MANUAL \
+		and status.state == emc.RCS_DONE:
+			self.newState("FINAL")
 
 	def final(self):
 		if self.entry:
@@ -272,23 +278,23 @@ class MotionHandler():
 			self.newState("WAITING")
 			h['motionComplete'] = 0
 
-	def finalOld(self):
-		if self.entry:
-			self.entry = False
+	# def finalOld(self):
+	# 	if self.entry:
+	# 		self.entry = False
 			
-			command.state(emc.STATE_OFF)
-			return
+	# 		command.state(emc.STATE_OFF)
+	# 		return
 
-		status.poll()
-		if status.state == emc.STATE_OFF:
-			#self.newState("WAITING")
-			#signal motionComplete
-			h['motionComplete'] = 1
+	# 	status.poll()
+	# 	if status.state == emc.STATE_OFF:
+	# 		#self.newState("WAITING")
+	# 		#signal motionComplete
+	# 		h['motionComplete'] = 1
 
-		#wait for enable to drop before return to waiting...
-		if h['enableMotion'] == 0:
-			self.newState("WAITING")
-			h['motionComplete'] = 0
+	# 	#wait for enable to drop before return to waiting...
+	# 	if h['enableMotion'] == 0:
+	# 		self.newState("WAITING")
+	# 		h['motionComplete'] = 0
 
 	# dict of state functions
 	states = {	"WAITING" : waiting, 
@@ -327,7 +333,7 @@ class MotionHandler():
 				# perodically print the state to stdout
 				if self.printStateTimer.timeOut:
 					self.printStateTimer.reset()
-					print "Motion Handler current is %s" % self.currentState
+					#print "Motion Handler current is %s" % self.currentState
 
 				
 		except KeyboardInterrupt:
@@ -339,50 +345,23 @@ class MotionHandler():
 		# perodically print the state to stdout
 		if self.printStateTimer.timeOut:
 			self.printStateTimer.reset()
-			print "Motion Handler current is %s" % self.currentState
+			#print "Motion Handler current is %s" % self.currentState
 
 h = hal.component("motionHandler")
 
 #inputs
 h.newpin("enableMotion", hal.HAL_BIT, hal.HAL_IN)
 h.newpin("enableManual", hal.HAL_BIT, hal.HAL_IN)
-
 h.newpin("motionComplete", hal.HAL_BIT, hal.HAL_OUT)
-
-
 h.ready()
 
 status = emc.stat()
 command = emc.command()
+machine = MotionHandler()
 
 try:
-	machine = MotionHandler()
 	while 1:
 		machine.run()
 
 except KeyboardInterrupt:
 	raise SystemExit
-
-# def ok_for_mdi():
-#     status.poll()
-#     return not status.estop and status.enabled and status.homed and (status.interp_state == emc.INTERP_IDLE)
-
-# try:
-# 	machine = MotionHandler()
-# 	machine.start()
-
-# 	# app = hmi(machine)
-# 	# gtk.main()
-
-# 	while 1:
-# 		variable = 1
-
-# except KeyboardInterrupt:
-# 	raise SystemExit
-
-# res = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-i", vars.emcini.get(), "-f", postgui_halfile])
-# connect the new pins to the system
-# processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", "post.hal"])
-# if processid:
-# 	raise SystemExit, processid
-
