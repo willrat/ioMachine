@@ -12,6 +12,8 @@ import hal
 import emc
 import os
 
+import storable
+
 import gettext
 import locale
 
@@ -24,6 +26,9 @@ lang1 = gettext.NullTranslations()
 lang2 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=['fi'], fallback=True)
 
 lang2.install()
+
+class storable():
+    pass
 
 class motionControlProgram():
    
@@ -67,7 +72,8 @@ class motionControlProgram():
                     50,
                     1,
                     25,
-                    5]
+                    5,
+                    0.5]
 
     print self.program
 
@@ -689,12 +695,12 @@ class hmi(object):
     #self.createProgram()
     
     # check for hal
-    #if h:
+    if h:
       #print "-------------------------------------------"
       #printHalPins()
       #print "-------------------------------------------"
-      #panel = gladevcp.makepins.GladePanel(h, "gui1.glade", self.builder, None)
-      #h.ready()
+      panel = gladevcp.makepins.GladePanel(h, "gui1.glade", self.builder, None)
+      h.ready()
       
 
 # enum states {   STATE_STANDBY = 0,
@@ -709,7 +715,7 @@ class hmi(object):
 states = [  "STANDBY",
             "READY",
             "CLOSEVICE",
-            "STARTSPINDLE",
+            #"STARTSPINDLE",
             "CYCLE",
             "OPENVICE",
             "MANUAL"]
@@ -717,7 +723,7 @@ states = [  "STANDBY",
 stateText = [   _("Standby"),
                 _("Ready"),
                 _("Close Vice"),
-                _("Start Spindle"),
+                #_("Start Spindle"),
                 _("Cycle"),
                 _("Open Vice"),
                 _("Manual"),
@@ -726,7 +732,7 @@ stateText = [   _("Standby"),
 stateTextVerbose = [    _("Standby - Press start"),
                         _("Ready - Hold control for cycle"),
                         _("Close Vice - Hold control to close vice"),
-                        _("Start Spindle"),
+                        #_("Start Spindle"),
                         _("Cycle - Forming tube"),
                         _("Open Vice - Hold control to open vice"),
                         _("Manual"),
@@ -738,16 +744,7 @@ cycleStates = [ "CLOSEVICE",
                 "CYCLE",
                 "OPENVICE"]
 
-parameters = [ _('Program Name'),
-               _('Forming Start Position X'),
-               _('Forming Start Position Y'),
-               _('Position To Tube Y'),
-               _('Position To Tube Feed'),
-               _('Forming Position Y'),
-               _('Forming Feed'),
-               _('Forming Dwell'),
-               _('Tube Stop Position X'),
-               _('Tube Stop Position Y')]
+
 
 def printHalPins():
   #res = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-i", vars.emcini.get(), "-f", postgui_halfile])  
@@ -767,7 +764,10 @@ try:
   
   h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
   h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
-  h.ready()
+  
+  h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
+  
+  #h.ready()
 except:
   print "hal exception"
 
@@ -777,7 +777,8 @@ except:
 if __name__ == "__main__":
   try:    
     app = hmi()
-    gtk.main()
     connectHalPins()
+    
+    gtk.main()    
   except KeyboardInterrupt:
     raise SystemExit

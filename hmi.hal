@@ -3,4 +3,5 @@
 net currentState 		machine.current_state 		hmi.currentState
 net manualRequest 		machine.requestManual		hmi.manualRequest
 
+net unclampTime			machine.unclampTime			hmi.unclampTime
 
