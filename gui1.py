@@ -11,10 +11,23 @@ import time
 import hal
 import emc
 import os
+
 import gettext
-_ = gettext.gettext
+import locale
+
+APPLICATION_DOMAIN = 'machine'
+
+locale.setlocale(locale.LC_ALL, "fi_FI.utf8")
+locale.bindtextdomain(APPLICATION_DOMAIN, './locale')
+
+lang1 = gettext.NullTranslations()
+lang2 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=['fi'], fallback=True)
+
+lang2.install()
 
 class motionControlProgram():
+   
+
   def __init__(self):
     print "init motionControlProgram"
 
@@ -30,40 +43,59 @@ class motionControlProgram():
 #                    (_('Tube Stop Position X'), 25), \
 #                    (_('Tube Stop Position Y'), 5) ]
 
-    self.program = [(_('Program Name'), 'default_program'), \
-                    (_('Forming Start Position X'), 90), \
-                    (_('Forming Start Position Y'), 0), \
-                    (_('Position To Tube Y'), 0), \
-                    (_('Position To Tube Feed'), 250), \
-                    (_('Forming Position Y'), 0), \
-                    (_('Forming Feed'), 50), \
-                    (_('Forming Dwell'), 1), \
-                    (_('Tube Stop Position X'), 25), \
-                    (_('Tube Stop Position Y'), 5) ]
+
+
+     
+
+#    self.program = [(_('Program Name'), 'default_program'), \
+#                    (_('Forming Start Position X'), 90), \
+#                    (_('Forming Start Position Y'), 0), \
+#                    (_('Position To Tube Y'), 0), \
+#                    (_('Position To Tube Feed'), 250), \
+#                    (_('Forming Position Y'), 0), \
+#                    (_('Forming Feed'), 50), \
+#                    (_('Forming Dwell'), 1), \
+#                    (_('Tube Stop Position X'), 25), \
+#                    (_('Tube Stop Position Y'), 5) ]
+
+    self.program = [_('Default Program'),
+                    90,
+                    0,
+                    0,
+                    250,
+                    0,
+                    50,
+                    1,
+                    25,
+                    5]
 
     print self.program
 
     
-  def getListStore(self):    
-    
-    listStore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
-
-    self.fillListStore(listStore)
-
-    #for key in self.program.keys():
-#    for key in self.program:
-#      print key
-#      listStore.append([key[0], key[1]])
-    
-    return listStore
-    #print self.program
+#  def getListStore(self):    
+#    
+#    listStore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
+#
+#    self.fillListStore(listStore)
+#
+#    return listStore
+#    #print self.program
     
   def fillListStore(self, listStore):
-    for key in self.program:        
-        print "fill liststore: %s" % key[0]
-        listStore.append([key[0], key[1]])
+#    #for i, key in enumerate(self.program):        
+#    for i in range(len(self.program)):
+#      #print "fill liststore: %s" % key
+#      #listStore.append([ key[0], key[1] ])
+#      listStore.append( [ parameters[i], self.program[i]] )
+        
+    counter = 0
+    for item in self.program:
+    
+      listStore.append( [ parameters[counter], item] )
+      counter += 1
 
-  #def getListStore(self):
+
+  
 
 class hmi(object):
     
@@ -88,23 +120,38 @@ class hmi(object):
           print "LOAD: Done Load command issue"
       
 
-  def createProgram2(self):
+  def createProgram(self):
 
-    programName = self.currentProgram[0][1]
-    startPositonX = float(self.currentProgram[1][1])
-    startPositonY = float(self.currentProgram[2][1])
-    positionToTubeY = float(self.currentProgram[3][1])
-    positionToTubeFeed = float(self.currentProgram[4][1])                               
-    formingPositionY = float(self.currentProgram[5][1])
-    formingFeed = float(self.currentProgram[6][1])
-    formingDwell = float(self.currentProgram[7][1])
-    tubeStopPositionX = float(self.currentProgram[8][1])
-    tubeStopPositionY = float(self.currentProgram[9][1])
+#    programName = self.currentProgram[0][1]
+#    startPositonX = float(self.currentProgram[1][1])
+#    startPositonY = float(self.currentProgram[2][1])
+#    positionToTubeY = float(self.currentProgram[3][1])
+#    positionToTubeFeed = float(self.currentProgram[4][1])                               
+#    formingPositionY = float(self.currentProgram[5][1])
+#    formingFeed = float(self.currentProgram[6][1])
+#    formingDwell = float(self.currentProgram[7][1])
+#    tubeStopPositionX = float(self.currentProgram[8][1])
+#    tubeStopPositionY = float(self.currentProgram[9][1])
+
+    programName = self.currentProgram.program[0]
+    startPositionX = float(self.currentProgram.program[1])
+    startPositionY = float(self.currentProgram.program[2])
+    positionToTubeY = float(self.currentProgram.program[3])
+    positionToTubeFeed = float(self.currentProgram.program[4])                               
+    formingPositionY = float(self.currentProgram.program[5])
+    formingFeed = float(self.currentProgram.program[6])
+    formingDwell = float(self.currentProgram.program[7])
+    tubeStopPositionX = float(self.currentProgram.program[8])
+    tubeStopPositionY = float(self.currentProgram.program[9])
 
     # logic checking
+    if startPositionY > positionToTubeY:
+        startPositionY = 0
+        
     if positionToTubeY > formingPositionY:
         positionToTubeY = 0
 
+    
 
 
     programString = ""
@@ -113,14 +160,14 @@ class hmi(object):
     programString += "G0 Y0\n"
     programString += "G0 X100\n"
 
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
     programString += "M3 S200\n"
 
     programString += "G1 Y %2.2f F %2.2f \n" % (positionToTubeY, positionToTubeFeed)
     programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
     programString += "G4 P %2.2f \n" % (formingDwell)
 
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
+    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
     programString += "M4 S200\n "
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (tubeStopPositionX, tubeStopPositionY)
     programString += "M30\n"
@@ -248,12 +295,13 @@ class hmi(object):
   def pollConnections(self):
     self.currentStateString = states[h['currentState']]
      
-    if currentStateString == "MANUAL":
+    if self.currentStateString == "MANUAL":
       print "current state is manual; set sensitivity appropriately"
-    elif currenStateString in cycleStates:
+    elif self.currentStateString in cycleStates:
       print "current state is inCycle"
     else:
-      print "either in standby or in ready"
+      pass
+      #print "either in standby or in ready"
 
     return True
 
@@ -288,8 +336,8 @@ class hmi(object):
         
     # in auto mode page
     if currentPage == 0:
+      #check for 'in cycle', disable notebook pages if so
       if self.currentStateString in cycleStates:
-        #setPagesActive()
         self.setNonAutoPagesInactive()
       else:
         self.setPagesActive()
@@ -319,19 +367,15 @@ class hmi(object):
   def on_editProgram_clicked(self, button):
     #load the current program into the dialog's liststore
     
-    self.programListStore.clear()
-    self.motionTester.program = self.currentProgram
-    self.motionTester.fillListStore(self.programListStore)
     
-    #show the screen    
-    self.programDialog.present()
-    self.programDialog.fullscreen()
     
+    self.editCurrent()  
 
+    
   # update the dynamic elements on the screens
   def updateControls(self):
     currentLabelText = _("Current Program: ")
-    currentLabelText += self.currentProgram[0][1]
+    currentLabelText += self.currentProgram.program[0]
     
     self.builder.get_object("currentProgramLabel").set_text(currentLabelText)
     self.builder.get_object("currentProgramLabel1").set_text(currentLabelText)
@@ -366,8 +410,32 @@ class hmi(object):
   #  program save/load management 
   #
 
+  def editCurrent(self):
+      
+    # clear the list store in the dialog 
+    self.programListStore.clear()
+    
+    
+    # copy the data over to fill the editor   
+    self.currentProgram.fillListStore(self.programListStore)
+
+    self.programDialog.present()
+    self.programDialog.fullscreen()
+
   def on_newProgramButton_clicked(self, button):
-    self.on_editProgram_clicked(button)
+    
+    # add a copy of the current program
+    print "New Program"
+    print "current length %s" % len(self.programs)
+    self.programs.append(self.currentProgram)
+    
+    print "new length %s" % len(self.programs)
+    self.currentProgram = self.programs[len(self.programs)-1]
+      
+    self.buildProgramList()
+    
+    self.editCurrent()
+    #self.on_editProgram_clicked(button)
 
   def on_loadProgramButton_clicked(self, button):
     # TODO: Check if we have 'saved' the current program
@@ -380,8 +448,16 @@ class hmi(object):
     self.currentProgram = self.programs[cursor[0][0]]
     
     # load data into motion control etc
-    self.createProgram2()
+    self.createProgram()
     self.loadMotionControlProgram()
+
+  #
+  #  System screen callbacks
+  #
+  def on_changeLanguageButton_clicked(self, button):
+    #on_changeLanguageButton_clicked
+    print "change language button clicked"
+    lang1.install()
 
   #
   #  program edit dialog methods
@@ -403,21 +479,26 @@ class hmi(object):
     
 #    for item in self.listStore:
 #        print item
-    self.currentProgram = []
+    #self.currentProgram = []
     
+    # copy the values from the list store back into the 
+    # current program array 
     for i, item in enumerate(self.programListStore):
         print "transfer: %s" % [item[0], item[1]]
-        self.currentProgram.append([item[0], item[1]])
+        self.currentProgram.program[i] = item[1]
+        #self.currentProgram.append(item[1])
 
-    #
-#    print "current program is now:"
-#    for line in self.currentProgram: 
-#        print line
     
-    self.createProgram2()
+    print "current program is now:"
+    for line in self.currentProgram.program: 
+        print line
+
+    # create ngc file, load to motion, update gremlin, 'close' window    
+    self.createProgram()
     self.loadMotionControlProgram()
     self.builder.get_object("hal_gremlin1").expose()        
     self.programDialog.iconify()
+    self.buildProgramList()
     
 
   def on_editing_started(self, cellrenderer, editable, path, user_param1=None):
@@ -468,10 +549,22 @@ class hmi(object):
   #  init etc...
   #
 
+  def buildProgramList(self):
+    # look up the name of the program from the store and
+    # add to the liststore
+    self.listStore.clear()
+    print "**** Build Program List ****"
+    for entry in self.programs:
+        print entry
+        print entry.program[0] 
+        self.listStore.append([entry.program[0]])
+    
+
+
   def initGui(self):
     self.builder = gtk.Builder()
+    self.builder.set_translation_domain('machine')
     self.builder.add_from_file("gui1.glade")
-
 
     settings = gtk.settings_get_default()
     settings.set_string_property("gtk-font-name", "Sans 16", "")
@@ -518,7 +611,7 @@ class hmi(object):
     self.programListStore = self.builder.get_object("liststore2")
     self.programListStore.clear()
     
-    self.motionTester.fillListStore(self.programListStore)    
+    #self.motionTester.fillListStore(self.programListStore)    
 
     #self.programDialog.show()
 
@@ -548,8 +641,8 @@ class hmi(object):
     self.verbose = True
     
     # create a test program
-    self.motionTester = motionControlProgram()
-    print self.motionTester
+#    self.motionTester = motionControlProgram()
+#    print self.motionTester
 
     # setup gtk elements
     self.initGui()
@@ -560,28 +653,32 @@ class hmi(object):
     
     # TODO: Load the 'programs' in from file...
     # we'll just make some up for now....
-    self.programs.append(self.motionTester.program)
-    self.programs.append(self.motionTester.program)
-    self.programs.append(self.motionTester.program)
-    self.programs.append(self.motionTester.program)
+#    self.programs.append(self.motionTester())
+#    self.programs.append(self.motionTester())
+#    self.programs.append(self.motionTester())
+#    self.programs.append(self.motionTester())
+    self.programs.append(motionControlProgram())
+    self.programs.append(motionControlProgram())
+    self.programs.append(motionControlProgram())
+    self.programs.append(motionControlProgram())
 
     # create a new liststore and overwrite current in treeview
     self.listStore = gtk.ListStore(gobject.TYPE_STRING)
     self.listView.set_model(self.listStore)
 
-    # look up the name of the program from the store and
-    # add to the liststore
-    for entry in self.programs:
-        print entry
-        print entry[0][1]
-        self.listStore.append([entry[0][1]])
+    self.buildProgramList()
 
     # load the first program as the current...
     # TODO: save the last used program 
     self.currentProgram = self.programs[0]
+    self.currentProgramIndex = 0
+    
+    # fill the list store based on the current program
+    self.currentProgram.fillListStore(self.programListStore)    
 
-    # udpate display and button states
-    gobject.timeout_add(100, self.updateControls)
+    # udpate display and button states, polling  etc
+    gobject.timeout_add(150, self.updateControls)
+    gobject.timeout_add(150, self.pollConnections)
 
     # linuxcnc stuff....
     
@@ -589,7 +686,7 @@ class hmi(object):
     self.status = emc.stat()
     
     # TODO: 
-    #self.createProgram2()
+    #self.createProgram()
     
     # check for hal
     #if h:
@@ -623,7 +720,8 @@ stateText = [   _("Standby"),
                 _("Start Spindle"),
                 _("Cycle"),
                 _("Open Vice"),
-                _("Manual")]
+                _("Manual"),
+                _("Cycle Aborted")]
 
 stateTextVerbose = [    _("Standby - Press start"),
                         _("Ready - Hold control for cycle"),
@@ -631,7 +729,8 @@ stateTextVerbose = [    _("Standby - Press start"),
                         _("Start Spindle"),
                         _("Cycle - Forming tube"),
                         _("Open Vice - Hold control to open vice"),
-                        _("Manual")]
+                        _("Manual"),
+                        _("Cycle Aborted")]
 
 # when we are in any of these states we are in a cycle
 cycleStates = [ "CLOSEVICE",
@@ -639,12 +738,27 @@ cycleStates = [ "CLOSEVICE",
                 "CYCLE",
                 "OPENVICE"]
 
+parameters = [ _('Program Name'),
+               _('Forming Start Position X'),
+               _('Forming Start Position Y'),
+               _('Position To Tube Y'),
+               _('Position To Tube Feed'),
+               _('Forming Position Y'),
+               _('Forming Feed'),
+               _('Forming Dwell'),
+               _('Tube Stop Position X'),
+               _('Tube Stop Position Y')]
+
 def printHalPins():
-  #res = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-i", vars.emcini.get(), "-f", postgui_halfile])
-  #connect the new pins to the system
+  #res = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-i", vars.emcini.get(), "-f", postgui_halfile])  
   processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "show", "pin", "hmi"])
   if processid:
     raise SystemExit, processid
+
+def connectHalPins():
+  #connect the new pins to the system
+  processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", "hmi.hal"])    
+    
 
 try:
   h = hal.component("hmi")
@@ -658,10 +772,12 @@ except:
   print "hal exception"
 
 
+
+
 if __name__ == "__main__":
   try:    
     app = hmi()
     gtk.main()
-
+    connectHalPins()
   except KeyboardInterrupt:
     raise SystemExit

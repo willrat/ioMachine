@@ -1,20 +1,15 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: machine\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-10-05 13:11+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Finnish\n"
 
 #: gui1.py:71
 msgid "Default Program"
@@ -22,7 +17,7 @@ msgstr ""
 
 #: gui1.py:387
 msgid "Current Program: "
-msgstr ""
+msgstr "Nykyinen Ohjelma:"
 
 #: gui1.py:723
 msgid "Standby"
@@ -36,7 +31,8 @@ msgstr ""
 msgid "Close Vice"
 msgstr ""
 
-#: gui1.py:726 gui1.py:735
+#: gui1.py:726
+#: gui1.py:735
 msgid "Start Spindle"
 msgstr ""
 
@@ -48,11 +44,13 @@ msgstr ""
 msgid "Open Vice"
 msgstr ""
 
-#: gui1.py:729 gui1.py:738
+#: gui1.py:729
+#: gui1.py:738
 msgid "Manual"
 msgstr ""
 
-#: gui1.py:730 gui1.py:739
+#: gui1.py:730
+#: gui1.py:739
 msgid "Cycle Aborted"
 msgstr ""
 
@@ -82,7 +80,7 @@ msgstr ""
 
 #: gui1.py:748
 msgid "Forming Start Position X"
-msgstr ""
+msgstr "lomake alkuasennossa"
 
 #: gui1.py:749
 msgid "Forming Start Position Y"
@@ -90,11 +88,11 @@ msgstr ""
 
 #: gui1.py:750
 msgid "Position To Tube Y"
-msgstr ""
+msgstr "Asema putkeen Y"
 
 #: gui1.py:751
 msgid "Position To Tube Feed"
-msgstr ""
+msgstr "Asema putkeen Feed"
 
 #: gui1.py:752
 msgid "Forming Position Y"
@@ -136,7 +134,9 @@ msgstr ""
 msgid "Motion Finalising"
 msgstr ""
 
-#: gui1.glade:45 gui1.glade:365 gui1.glade:448
+#: gui1.glade:45
+#: gui1.glade:365
+#: gui1.glade:448
 msgid "label"
 msgstr ""
 
@@ -144,7 +144,8 @@ msgstr ""
 msgid "EDIT"
 msgstr ""
 
-#: gui1.glade:122 gui1.glade:509
+#: gui1.glade:122
+#: gui1.glade:509
 msgid "Current Program Name\n"
 msgstr ""
 
@@ -202,7 +203,7 @@ msgstr ""
 
 #: gui1.glade:496
 msgid "MANUAL"
-msgstr ""
+msgstr "käsikäyttöinen"
 
 #: gui1.glade:561
 msgid "New"
@@ -222,7 +223,7 @@ msgstr ""
 
 #: gui1.glade:648
 msgid "change language"
-msgstr ""
+msgstr "vaihtaa kieltä"
 
 #: gui1.glade:679
 msgid "Shutdown Machine"
@@ -287,3 +288,4 @@ msgstr ""
 #: gui1.glade:1091
 msgid "OK"
 msgstr ""
+
