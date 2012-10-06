@@ -12,7 +12,7 @@ import hal
 import emc
 import os
 
-import storable
+from storable import storable
 
 import gettext
 import locale
@@ -27,79 +27,66 @@ lang2 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=
 
 lang2.install()
 
-class storable():
-    pass
-
-class motionControlProgram():
-   
-
-  def __init__(self):
-    print "init motionControlProgram"
-
-    # these are the default values
-#    self.program = [(_('Program Name'), 'default_program'), \
-#                    (_('Start Position X'), 25), \
-#                    (_('start Position Y'), 0), \
-#                    (_('Position To Tube Y'), 0), \
-#                    (_('Position To Tube Feed'), 250), \
-#                    (_('Forming Position Y'), 0), \
-#                    (_('Forming Feed'), 50), \
-#                    (_('Forming Dwell'), 1), \
-#                    (_('Tube Stop Position X'), 25), \
-#                    (_('Tube Stop Position Y'), 5) ]
-
-
-
-     
-
-#    self.program = [(_('Program Name'), 'default_program'), \
-#                    (_('Forming Start Position X'), 90), \
-#                    (_('Forming Start Position Y'), 0), \
-#                    (_('Position To Tube Y'), 0), \
-#                    (_('Position To Tube Feed'), 250), \
-#                    (_('Forming Position Y'), 0), \
-#                    (_('Forming Feed'), 50), \
-#                    (_('Forming Dwell'), 1), \
-#                    (_('Tube Stop Position X'), 25), \
-#                    (_('Tube Stop Position Y'), 5) ]
-
-    self.program = [_('Default Program'),
-                    90,
-                    0,
-                    0,
-                    250,
-                    0,
-                    50,
-                    1,
-                    25,
-                    5,
-                    0.5]
-
-    print self.program
-
-    
-#  def getListStore(self):    
+#class storable():
+#    pass
+#
+#class motionControlProgram():
+#   
+#
+#  def __init__(self):
+#    print "init motionControlProgram"
+#
+#    # these are the default values
+##    self.program = [(_('Program Name'), 'default_program'), \
+##                    (_('Start Position X'), 25), \
+##                    (_('start Position Y'), 0), \
+##                    (_('Position To Tube Y'), 0), \
+##                    (_('Position To Tube Feed'), 250), \
+##                    (_('Forming Position Y'), 0), \
+##                    (_('Forming Feed'), 50), \
+##                    (_('Forming Dwell'), 1), \
+##                    (_('Tube Stop Position X'), 25), \
+##                    (_('Tube Stop Position Y'), 5) ]
+#
+#
+#
+#     
+#
+##    self.program = [(_('Program Name'), 'default_program'), \
+##                    (_('Forming Start Position X'), 90), \
+##                    (_('Forming Start Position Y'), 0), \
+##                    (_('Position To Tube Y'), 0), \
+##                    (_('Position To Tube Feed'), 250), \
+##                    (_('Forming Position Y'), 0), \
+##                    (_('Forming Feed'), 50), \
+##                    (_('Forming Dwell'), 1), \
+##                    (_('Tube Stop Position X'), 25), \
+##                    (_('Tube Stop Position Y'), 5) ]
+#
+#    self.program = [_('Default Program'),
+#                    90,
+#                    0,
+#                    0,
+#                    250,
+#                    0,
+#                    50,
+#                    1,
+#                    25,
+#                    5,
+#                    0.5]
+#
+#    print self.program
+#
 #    
-#    listStore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
 #
-#    self.fillListStore(listStore)
+#    
+#  def fillListStore(self, listStore):
 #
-#    return listStore
-#    #print self.program
-    
-  def fillListStore(self, listStore):
-#    #for i, key in enumerate(self.program):        
-#    for i in range(len(self.program)):
-#      #print "fill liststore: %s" % key
-#      #listStore.append([ key[0], key[1] ])
-#      listStore.append( [ parameters[i], self.program[i]] )
-        
-    counter = 0
-    for item in self.program:
-    
-      listStore.append( [ parameters[counter], item] )
-      counter += 1
-
+#    counter = 0
+#    for item in self.program:
+#    
+#      listStore.append( [ parameters[counter], item] )
+#      counter += 1
 
   
 
@@ -169,13 +156,15 @@ class hmi(object):
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
     programString += "M3 S200\n"
 
-    programString += "G1 Y %2.2f F %2.2f \n" % (positionToTubeY, positionToTubeFeed)
+    #programString += "G1 Y %2.2f F %2.2f \n" % (positionToTubeY, positionToTubeFeed)
     programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
     programString += "G4 P %2.2f \n" % (formingDwell)
 
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
-    programString += "M4 S200\n "
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (tubeStopPositionX, tubeStopPositionY)
+    programString += "M4\n "
+    programString += "; move to tube stop\n"
+    programString += "G1 X %2.2f F1000\n" % (tubeStopPositionX)
+    programString += "G1 Y %2.2f \n" % (tubeStopPositionY)
     programString += "M30\n"
     
     #programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
@@ -188,6 +177,19 @@ class hmi(object):
     print "Written program"
     print programString
     print "*****************************"
+
+    stopPosProg = ""
+    stopPosProg += "; program for %s\n" % (programName)
+    stopPosProg += "; rapid to safe position\n"
+    stopPosProg += "G0 Y0\n"
+    stopPosProg += "G0 X100\n"
+    stopPosProg += "; move to tube stop\n"
+    stopPosProg += "G1 X %2.2f Y %2.2f F1000\n" % (tubeStopPositionX, tubeStopPositionY)
+    stopPosProg += "M30\n"
+
+    f = open('/tmp/StopPositionProgram.ngc', 'w')
+    f.write(stopPosProg)
+    f.close()
 
   #
   #  general application callbacks
@@ -556,16 +558,21 @@ class hmi(object):
   #
 
   def buildProgramList(self):
+    
+    if not self.listStore:
+      self.listStore = gtk.ListStore(gobject.TYPE_STRING)
+      self.listView.set_model(self.listStore)
+    
     # look up the name of the program from the store and
     # add to the liststore
     self.listStore.clear()
     print "**** Build Program List ****"
-    for entry in self.programs:
-        print entry
-        print entry.program[0] 
-        self.listStore.append([entry.program[0]])
-    
-
+    for entry in self.s.getPrograms():
+        
+      print "***** %s *****" % entry.program[0]
+      print entry
+       
+      self.listStore.append([entry.program[0]])
 
   def initGui(self):
     self.builder = gtk.Builder()
@@ -581,47 +588,20 @@ class hmi(object):
     #self.window1.fullscreen()
     self.window1.show()
 
-    #self.builder.get_object("window2").show()
 
-    self.manualWindow = self.builder.get_object("manual")
-    #self.manualWindow.show()
-    #self.manualWindow.fullscreen()
+
+#    self.manualWindow = self.builder.get_object("manual")
 
     self.viceCloseToggle = self.builder.get_object("viceCloseToggle")
     self.viceOpenToggle = self.builder.get_object("viceOpenToggle")
-    #self.positionLabel = self.builder.get_object("positionLabel")
-
-    # self.widget = self.builder.get_object("toggleButton1")
-    # self.widget.get_settings().set_string_property('gtk-font-name', 'sans normal 9','')
-
-
-
-#    self.scrolledWindow = self.builder.get_object("scrolledwindow1")
-#    if not self.scrolledWindow:
-#      print "no scrolledwindow"
-
     self.listStore = self.builder.get_object("liststore1")
-    if not self.listStore:
-      print "no listStore"
-
-    # treeView = gtk.TreeView(self.listStore)
-    # #treeView.connect("row-activated", self.on_activated)
-    # treeView.set_rules_hint(True)
-    # self.scrolledWindow.add(treeView)
     self.listView = self.builder.get_object("treeview1")
-    if not self.listView:
-      print "no listView/treeview1"
 
     self.programDialog = self.builder.get_object("programeditdialog")    
     self.programTreeView = self.builder.get_object("treeview2")
     self.programListStore = self.builder.get_object("liststore2")
     self.programListStore.clear()
     
-    #self.motionTester.fillListStore(self.programListStore)    
-
-    #self.programDialog.show()
-
-  
   def initNumericKeyboard(self):
     print ""
     self.numKeyWindow = self.builder.get_object("numericKey")
@@ -643,41 +623,35 @@ class hmi(object):
   
   def __init__(self, stateMachine=None):
 
-    #self.FINAL = False
+    
     self.verbose = True
     
-    # create a test program
-#    self.motionTester = motionControlProgram()
-#    print self.motionTester
-
     # setup gtk elements
     self.initGui()
     self.initNumericKeyboard()
 
-    # create store for all programs on the 'hmi'
-    self.programs = []
-    
-    # TODO: Load the 'programs' in from file...
-    # we'll just make some up for now....
-#    self.programs.append(self.motionTester())
-#    self.programs.append(self.motionTester())
-#    self.programs.append(self.motionTester())
-#    self.programs.append(self.motionTester())
-    self.programs.append(motionControlProgram())
-    self.programs.append(motionControlProgram())
-    self.programs.append(motionControlProgram())
-    self.programs.append(motionControlProgram())
+    self.s = storable()
 
-    # create a new liststore and overwrite current in treeview
-    self.listStore = gtk.ListStore(gobject.TYPE_STRING)
-    self.listView.set_model(self.listStore)
+    # create store for all programs on the 'hmi'
+#    self.programs = []
+#    
+#    self.programs.append(motionControlProgram())
+#    self.programs.append(motionControlProgram())
+#    self.programs.append(motionControlProgram())
+#    self.programs.append(motionControlProgram())
+
+
 
     self.buildProgramList()
 
     # load the first program as the current...
     # TODO: save the last used program 
+    
+    self.programs = self.s.getPrograms()
+    # not sure if this will work
     self.currentProgram = self.programs[0]
-    self.currentProgramIndex = 0
+    #self.currentProgram = s.getPrograms()[0]
+    #self.currentProgramIndex = 0
     
     # fill the list store based on the current program
     self.currentProgram.fillListStore(self.programListStore)    
@@ -756,25 +730,21 @@ def connectHalPins():
   #connect the new pins to the system
   processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", "hmi.hal"])    
     
-
-try:
-  h = hal.component("hmi")
-  h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
-  h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
-  
-  h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
-  h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
-  
-  h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
-  
-  #h.ready()
-except:
-  print "hal exception"
-
-
-
-
 if __name__ == "__main__":
+  try:
+    h = hal.component("hmi")
+    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
+    h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
+  
+    h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
+    h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
+  
+    h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
+  
+    #h.ready()
+  except:
+    print "hal exception"
+  
   try:    
     app = hmi()
     connectHalPins()
