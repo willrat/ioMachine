@@ -1,7 +1,14 @@
 # what would be called POSTGUI...
 
-net currentState 		machine.current_state 		hmi.currentState
+net currentState 		machine.currentState 		hmi.currentState
 net manualRequest 		machine.requestManual		hmi.manualRequest
 
 net unclampTime			machine.unclampTime			hmi.unclampTime
 
+#    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
+#    h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
+  
+#    h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
+#    h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
+  
+#    h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)

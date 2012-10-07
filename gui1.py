@@ -338,9 +338,9 @@ class hmi(object):
 
     # set the manual request flag to the machine controller    
     if currentPage == 1:
-        h['manualRequest'] = 0
+        h['requestManual'] = 0
     elif page_num == 1:
-        h['manualRequest'] = 1
+        h['requestManual'] = 1
         
     # in auto mode page
     if currentPage == 0:
@@ -443,7 +443,6 @@ class hmi(object):
     self.buildProgramList()
     
     self.editCurrent()
-    #self.on_editProgram_clicked(button)
 
   def on_loadProgramButton_clicked(self, button):
     # TODO: Check if we have 'saved' the current program
@@ -594,7 +593,8 @@ class hmi(object):
 
     self.viceCloseToggle = self.builder.get_object("viceCloseToggle")
     self.viceOpenToggle = self.builder.get_object("viceOpenToggle")
-    self.listStore = self.builder.get_object("liststore1")
+    #self.listStore = self.builder.get_object("liststore1")
+    self.listStore = None
     self.listView = self.builder.get_object("treeview1")
 
     self.programDialog = self.builder.get_object("programeditdialog")    
@@ -737,7 +737,7 @@ if __name__ == "__main__":
     h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
   
     h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
-    h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
+    h.newpin("requestManual", hal.HAL_BIT, hal.HAL_OUT)
   
     h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
   
