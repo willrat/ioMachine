@@ -8,6 +8,8 @@ net unclampTime			machine.unclampTime			hmi.unclampTime
 net viceOpenToggle		machine.viceOpenJog			hmi.viceOpenToggle
 net viceCloseToggle		machine.viceCloseJog		hmi.viceCloseToggle
 
+net enableJogButtons	machine.enableJogButtons	hmi.enableJogButtons
+
 #    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
 #    h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
   

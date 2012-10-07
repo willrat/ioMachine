@@ -298,7 +298,6 @@
                   <object class="GtkFrame" id="hal buttons2">
                     <property name="visible">True</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="alignment1">
                         <property name="visible">True</property>
@@ -382,7 +381,6 @@
                   <object class="GtkFrame" id="frame3">
                     <property name="visible">True</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="alignment2">
                         <property name="visible">True</property>
@@ -414,7 +412,6 @@
                   <object class="GtkFrame" id="frame4">
                     <property name="visible">True</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="alignment6">
                         <property name="visible">True</property>
@@ -424,12 +421,15 @@
                             <property name="visible">True</property>
                             <property name="layout_style">spread</property>
                             <child>
-                              <object class="HAL_ToggleButton" id="viceOpenToggle">
-                                <property name="label" translatable="yes">Vice Open</property>
+                              <object class="HAL_RadioButton" id="viceOpenToggle">
+                                <property name="label" translatable="yes">Open Vice</property>
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">True</property>
-                                <signal name="toggled" handler="on_viceOpenToggle_toggled"/>
+                                <property name="can_focus">False</property>
+                                <property name="receives_default">False</property>
+                                <property name="image">viceOpenImage</property>
+                                <property name="image_position">top</property>
+                                <property name="active">True</property>
+                                <property name="draw_indicator">False</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -438,17 +438,72 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="HAL_ToggleButton" id="viceCloseToggle">
-                                <property name="label" translatable="yes">Vice Close</property>
+                              <object class="HAL_RadioButton" id="viceCloseToggle">
+                                <property name="label" translatable="yes">Close Vice</property>
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">True</property>
-                                <signal name="toggled" handler="on_viceCloseToggle_toggled"/>
+                                <property name="can_focus">False</property>
+                                <property name="receives_default">False</property>
+                                <property name="image">viceCloseImage</property>
+                                <property name="image_position">top</property>
+                                <property name="active">True</property>
+                                <property name="draw_indicator">False</property>
+                                <property name="group">viceOpenToggle</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">False</property>
                                 <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="frame5">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0</property>
+                                <child>
+                                  <object class="GtkAlignment" id="alignment5">
+                                    <property name="visible">True</property>
+                                    <property name="left_padding">12</property>
+                                    <child>
+                                      <object class="GtkHButtonBox" id="hbuttonbox17">
+                                        <property name="visible">True</property>
+                                        <child>
+                                          <object class="GtkLabel" id="label14">
+                                            <property name="visible">True</property>
+                                            <property name="label" translatable="yes">Vice Closed</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">False</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="HAL_LED" id="viceClosedLED">
+                                            <property name="visible">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">False</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="label13">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">status</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
+                                <property name="position">2</property>
+                                <property name="secondary">True</property>
                               </packing>
                             </child>
                           </object>
@@ -1256,5 +1311,16 @@
       <action-widget response="0">programEditCancel</action-widget>
       <action-widget response="0">programEditOK</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkImage" id="viceOpenImage">
+    <property name="visible">True</property>
+    <property name="pixel_size">48</property>
+    <property name="icon_name">go-up</property>
+    <property name="icon-size">3</property>
+  </object>
+  <object class="GtkImage" id="viceCloseImage">
+    <property name="visible">True</property>
+    <property name="pixel_size">48</property>
+    <property name="icon_name">go-down</property>
   </object>
 </interface>

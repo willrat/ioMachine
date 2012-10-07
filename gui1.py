@@ -146,33 +146,28 @@ class hmi(object):
     print "on_changeScreenButton_clicked"
     self.window1.show()
 
-#  def on_changeScreenButton_button_press_event(self, widget, data=None):
-#    print "on_changeScreenButton_button_press_event"
-#    if self.window1:
-#      self.window1.show()
-
   def on_viceOpenToggle_toggled(self, widget, data=None):
     print "on_viceOpenToggle_toggled"
-    if widget.get_active:
-      print "widget is active"
-    else:
-      print "widget is not active"
-
-
-    if self.viceCloseToggle:
-      if self.viceOpenToggle.get_active():
-        self.viceCloseToggle.set_active(False)
-    else:
-      print "no viceCloseToggle"
+#    if widget.get_active:
+#      print "widget is active"
+#    else:
+#      print "widget is not active"
+#
+#
+#    if self.viceCloseToggle:
+#      if self.viceOpenToggle.get_active():
+#        self.viceCloseToggle.set_active(False)
+#    else:
+#      print "no viceCloseToggle"
 
     
   def on_viceCloseToggle_toggled(self, widget, data=None):
     print "on_viceCloseToggle_toggled"
-    if self.viceOpenToggle:
-      if self.viceCloseToggle.get_active():
-        self.viceOpenToggle.set_active(False)
-    else:
-      print "no viceOpenToggle"
+#    if self.viceOpenToggle:
+#      if self.viceCloseToggle.get_active():
+#        self.viceOpenToggle.set_active(False)
+#    else:
+#      print "no viceOpenToggle"
 
   def on_jogZPlus_pressed(self, widget, data=None):
     self.jogAxis(0, 75)
@@ -224,9 +219,11 @@ class hmi(object):
     self.currentStateString = states[h['currentState']]
      
     if self.currentStateString == "MANUAL":
-      print "current state is manual; set sensitivity appropriately"
+      #print "current state is manual; set sensitivity appropriately"
+      pass
     elif self.currentStateString in cycleStates:
-      print "current state is inCycle"
+      #print "current state is inCycle"
+      pass
     else:
       pass
       #print "either in standby or in ready"
@@ -647,16 +644,15 @@ def connectHalPins():
 if __name__ == "__main__":
   try:
     h = hal.component("hmi")
+    
     h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
     h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
-    h.newpin("enableJogButtons", hal.HAL_U32, hal.HAL_IN)
+    h.newpin("enableJogButtons", hal.HAL_BIT, hal.HAL_IN)
   
-  #  h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
-    h.newpin("requestManual", hal.HAL_BIT, hal.HAL_OUT)
-  
+    h.newpin("requestManual", hal.HAL_BIT, hal.HAL_OUT)  
     h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
   
-    #h.ready()
+    
   except:
     print "hal exception"
   
