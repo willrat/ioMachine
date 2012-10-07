@@ -13,6 +13,7 @@ import emc
 import os
 
 from storable import storable
+from motionProgram import motionProgram
 
 import gettext
 import locale
@@ -26,69 +27,6 @@ lang1 = gettext.NullTranslations()
 lang2 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=['fi'], fallback=True)
 
 lang2.install()
-
-#class storable():
-#    pass
-#
-#class motionControlProgram():
-#   
-#
-#  def __init__(self):
-#    print "init motionControlProgram"
-#
-#    # these are the default values
-##    self.program = [(_('Program Name'), 'default_program'), \
-##                    (_('Start Position X'), 25), \
-##                    (_('start Position Y'), 0), \
-##                    (_('Position To Tube Y'), 0), \
-##                    (_('Position To Tube Feed'), 250), \
-##                    (_('Forming Position Y'), 0), \
-##                    (_('Forming Feed'), 50), \
-##                    (_('Forming Dwell'), 1), \
-##                    (_('Tube Stop Position X'), 25), \
-##                    (_('Tube Stop Position Y'), 5) ]
-#
-#
-#
-#     
-#
-##    self.program = [(_('Program Name'), 'default_program'), \
-##                    (_('Forming Start Position X'), 90), \
-##                    (_('Forming Start Position Y'), 0), \
-##                    (_('Position To Tube Y'), 0), \
-##                    (_('Position To Tube Feed'), 250), \
-##                    (_('Forming Position Y'), 0), \
-##                    (_('Forming Feed'), 50), \
-##                    (_('Forming Dwell'), 1), \
-##                    (_('Tube Stop Position X'), 25), \
-##                    (_('Tube Stop Position Y'), 5) ]
-#
-#    self.program = [_('Default Program'),
-#                    90,
-#                    0,
-#                    0,
-#                    250,
-#                    0,
-#                    50,
-#                    1,
-#                    25,
-#                    5,
-#                    0.5]
-#
-#    print self.program
-#
-#    
-#
-#    
-#  def fillListStore(self, listStore):
-#
-#    counter = 0
-#    for item in self.program:
-#    
-#      listStore.append( [ parameters[counter], item] )
-#      counter += 1
-
-  
 
 class hmi(object):
     
@@ -111,41 +49,23 @@ class hmi(object):
          
       if self.verbose:
           print "LOAD: Done Load command issue"
-      
+      h['unclampTime'] = float(self.currentProgram.program[8])
 
   def createProgram(self):
 
-#    programName = self.currentProgram[0][1]
-#    startPositonX = float(self.currentProgram[1][1])
-#    startPositonY = float(self.currentProgram[2][1])
-#    positionToTubeY = float(self.currentProgram[3][1])
-#    positionToTubeFeed = float(self.currentProgram[4][1])                               
-#    formingPositionY = float(self.currentProgram[5][1])
-#    formingFeed = float(self.currentProgram[6][1])
-#    formingDwell = float(self.currentProgram[7][1])
-#    tubeStopPositionX = float(self.currentProgram[8][1])
-#    tubeStopPositionY = float(self.currentProgram[9][1])
-
+    # TODO: use currentProgram.getValue("parameter")
     programName = self.currentProgram.program[0]
     startPositionX = float(self.currentProgram.program[1])
     startPositionY = float(self.currentProgram.program[2])
-    positionToTubeY = float(self.currentProgram.program[3])
-    positionToTubeFeed = float(self.currentProgram.program[4])                               
-    formingPositionY = float(self.currentProgram.program[5])
-    formingFeed = float(self.currentProgram.program[6])
-    formingDwell = float(self.currentProgram.program[7])
-    tubeStopPositionX = float(self.currentProgram.program[8])
-    tubeStopPositionY = float(self.currentProgram.program[9])
+    formingPositionY = float(self.currentProgram.program[3])
+    formingFeed = float(self.currentProgram.program[4])
+    formingDwell = float(self.currentProgram.program[5])
+    tubeStopPositionX = float(self.currentProgram.program[6])
+    tubeStopPositionY = float(self.currentProgram.program[7])
 
     # logic checking
-    if startPositionY > positionToTubeY:
+    if startPositionY > formingPositionY:
         startPositionY = 0
-        
-    if positionToTubeY > formingPositionY:
-        positionToTubeY = 0
-
-    
-
 
     programString = ""
     programString += "; program for %s\n" % (programName)
@@ -156,7 +76,6 @@ class hmi(object):
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
     programString += "M3 S200\n"
 
-    #programString += "G1 Y %2.2f F %2.2f \n" % (positionToTubeY, positionToTubeFeed)
     programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
     programString += "G4 P %2.2f \n" % (formingDwell)
 
@@ -184,7 +103,8 @@ class hmi(object):
     stopPosProg += "G0 Y0\n"
     stopPosProg += "G0 X100\n"
     stopPosProg += "; move to tube stop\n"
-    stopPosProg += "G1 X %2.2f Y %2.2f F1000\n" % (tubeStopPositionX, tubeStopPositionY)
+    stopPosProg += "G1 X %2.2f F1000\n" % (tubeStopPositionX)
+    stopPosProg += "G1 Y %2.2f \n" % (tubeStopPositionY)
     stopPosProg += "M30\n"
 
     f = open('/tmp/StopPositionProgram.ngc', 'w')
@@ -365,9 +285,9 @@ class hmi(object):
     print "on_treeview1_cursor_changed"
     #widget.
 
-  def on_newprogrambutton_released(self, widget):
-    #createProgram
-    self.programs.append()
+#  def on_newprogrambutton_released(self, widget):
+#    #createProgram
+#    self.programs.append()
 
   #
   #  auto screen callbacks
@@ -382,7 +302,8 @@ class hmi(object):
     
   # update the dynamic elements on the screens
   def updateControls(self):
-    currentLabelText = _("Current Program: ")
+    currentLabelText = _("Current Program:")
+    currentLabelText += " "
     currentLabelText += self.currentProgram.program[0]
     
     self.builder.get_object("currentProgramLabel").set_text(currentLabelText)
@@ -407,9 +328,11 @@ class hmi(object):
       label.set_text("cannot get machine state")
 
     # TODO: Read if jog OK
-    if True:
-      jogButtonBox = self.builder.get_object("jogButtonBox")
-      if jogButtonBox:
+    jogButtonBox = self.builder.get_object("jogButtonBox")
+    if jogButtonBox:
+      if h['enableJogButtons']:
+        jogButtonBox.set_sensitive(True)
+      else:
         jogButtonBox.set_sensitive(False)
 
     return True
@@ -418,12 +341,16 @@ class hmi(object):
   #  program save/load management 
   #
 
+  def setCurrent(self, index):
+    self.s.currentIndex = index
+    self.currentProgram = self.programs[self.s.currentIndex]
+    
+
   def editCurrent(self):
       
     # clear the list store in the dialog 
     self.programListStore.clear()
-    
-    
+  
     # copy the data over to fill the editor   
     self.currentProgram.fillListStore(self.programListStore)
 
@@ -433,15 +360,15 @@ class hmi(object):
   def on_newProgramButton_clicked(self, button):
     
     # add a copy of the current program
-    print "New Program"
-    print "current length %s" % len(self.programs)
-    self.programs.append(self.currentProgram)
+    print "HMI: New Program"
+    newProgram = motionProgram(self.currentProgram)
+    newIndex = len(self.programs)
+    self.programs.append(newProgram)
+    self.setCurrent(newIndex)
+    self.currentProgram = newProgram
     
-    print "new length %s" % len(self.programs)
-    self.currentProgram = self.programs[len(self.programs)-1]
       
-    self.buildProgramList()
-    
+    self.buildProgramList()    
     self.editCurrent()
 
   def on_loadProgramButton_clicked(self, button):
@@ -449,11 +376,8 @@ class hmi(object):
     
     # get the reference of the current selected program in the program tree view
     cursor = self.builder.get_object("treeview1").get_cursor()
-    print self.programs[cursor[0][0]]
-
-    # copy data into current program
-    self.currentProgram = self.programs[cursor[0][0]]
-    
+    #print self.programs[cursor[0][0]]        
+    self.setCurrent(cursor[0][0])
     # load data into motion control etc
     self.createProgram()
     self.loadMotionControlProgram()
@@ -506,7 +430,7 @@ class hmi(object):
     self.builder.get_object("hal_gremlin1").expose()        
     self.programDialog.iconify()
     self.buildProgramList()
-    
+    self.s.saveState()
 
   def on_editing_started(self, cellrenderer, editable, path, user_param1=None):
     print "on editing started"
@@ -573,6 +497,9 @@ class hmi(object):
        
       self.listStore.append([entry.program[0]])
 
+    # save the program list
+    self.s.saveState()
+
   def initGui(self):
     self.builder = gtk.Builder()
     self.builder.set_translation_domain('machine')
@@ -588,12 +515,8 @@ class hmi(object):
     self.window1.show()
 
 
-
-#    self.manualWindow = self.builder.get_object("manual")
-
     self.viceCloseToggle = self.builder.get_object("viceCloseToggle")
     self.viceOpenToggle = self.builder.get_object("viceOpenToggle")
-    #self.listStore = self.builder.get_object("liststore1")
     self.listStore = None
     self.listView = self.builder.get_object("treeview1")
 
@@ -622,7 +545,9 @@ class hmi(object):
     #self.numKeyWindow.show()    
   
   def __init__(self, stateMachine=None):
-
+    
+    self.command = emc.command()
+    self.status = emc.stat()
     
     self.verbose = True
     
@@ -630,44 +555,6 @@ class hmi(object):
     self.initGui()
     self.initNumericKeyboard()
 
-    self.s = storable()
-
-    # create store for all programs on the 'hmi'
-#    self.programs = []
-#    
-#    self.programs.append(motionControlProgram())
-#    self.programs.append(motionControlProgram())
-#    self.programs.append(motionControlProgram())
-#    self.programs.append(motionControlProgram())
-
-
-
-    self.buildProgramList()
-
-    # load the first program as the current...
-    # TODO: save the last used program 
-    
-    self.programs = self.s.getPrograms()
-    # not sure if this will work
-    self.currentProgram = self.programs[0]
-    #self.currentProgram = s.getPrograms()[0]
-    #self.currentProgramIndex = 0
-    
-    # fill the list store based on the current program
-    self.currentProgram.fillListStore(self.programListStore)    
-
-    # udpate display and button states, polling  etc
-    gobject.timeout_add(150, self.updateControls)
-    gobject.timeout_add(150, self.pollConnections)
-
-    # linuxcnc stuff....
-    
-    self.command = emc.command()
-    self.status = emc.stat()
-    
-    # TODO: 
-    #self.createProgram()
-    
     # check for hal
     if h:
       #print "-------------------------------------------"
@@ -675,6 +562,33 @@ class hmi(object):
       #print "-------------------------------------------"
       panel = gladevcp.makepins.GladePanel(h, "gui1.glade", self.builder, None)
       h.ready()
+
+    self.s = storable()
+    self.s.loadState()
+    self.buildProgramList()
+
+    # load the first program as the current...
+    # TODO: save the last used program 
+    
+    self.programs = self.s.getPrograms()
+    #self.currentProgram = self.programs[0]
+    self.setCurrent(self.s.currentIndex)
+    
+    # fill the list store based on the current program
+    self.currentProgram.fillListStore(self.programListStore)  
+    
+    # load the current program
+    self.createProgram()
+    self.loadMotionControlProgram()
+                       
+    
+  
+
+    # udpate display and button states, polling  etc
+    gobject.timeout_add(150, self.updateControls)
+    gobject.timeout_add(150, self.pollConnections)
+    
+
       
 
 # enum states {   STATE_STANDBY = 0,
@@ -735,8 +649,9 @@ if __name__ == "__main__":
     h = hal.component("hmi")
     h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
     h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
+    h.newpin("enableJogButtons", hal.HAL_U32, hal.HAL_IN)
   
-    h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
+  #  h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
     h.newpin("requestManual", hal.HAL_BIT, hal.HAL_OUT)
   
     h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
