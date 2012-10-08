@@ -9,15 +9,25 @@ import copy
 
 gettext.install('machine')
 
+#parameters = [ _('Program Name'),
+#               _('Forming Start Position X (mm)'),
+#               _('Forming Start Position Y (mm)'),
+#               _('Forming Position Y  (mm)'),
+#               _('Forming Feed  (mm/s)'),
+#               _('Forming Dwell (s)'),
+#               _('Tube Stop Position X  (mm)'),
+#               _('Tube Stop Position Y (mm)'),
+#               _('Vice Unclamp Timer (s)')]
+
 parameters = [ _('Program Name'),
-               _('Forming Start Position X (mm)'),
-               _('Forming Start Position Y (mm)'),
-               _('Forming Position Y  (mm)'),
-               _('Forming Feed  (mm/s)'),
-               _('Forming Dwell (s)'),
-               _('Tube Stop Position X  (mm)'),
-               _('Tube Stop Position Y (mm)'),
-               _('Vice Unclamp Timer (s)')]
+               _('Forming Start Position X'),
+               _('Forming Start Position Y'),
+               _('Forming Position Y'),
+               _('Forming Feed'),
+               _('Forming Dwell'),
+               _('Tube Stop Position X '),
+               _('Tube Stop Position Y'),
+               _('Vice Unclamp Timer')]
 
 units = ['',
          'mm',

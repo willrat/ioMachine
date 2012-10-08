@@ -3,12 +3,15 @@
 net currentState 		machine.currentState 		hmi.currentState
 net manualRequest 		machine.requestManual		hmi.requestManual
 
+show pin hmi.unclampTime
+
 net unclampTime			machine.unclampTime			hmi.unclampTime
 
 net viceOpenToggle		machine.viceOpenJog			hmi.viceOpenToggle
 net viceCloseToggle		machine.viceCloseJog		hmi.viceCloseToggle
 
 net enableJogButtons	machine.enableJogButtons	hmi.enableJogButtons
+net hydraulicAxisJog	machine.hydraulicAxisJog	hmi.hydraulicAxisJog
 
 #    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
 #    h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)

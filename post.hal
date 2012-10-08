@@ -1,2 +1,0 @@
-setp hm2_5i20.0.gpio.047.is_output 0
-net IO.0 hm2_5i20.0.gpio.047.in efmachine.mcb1

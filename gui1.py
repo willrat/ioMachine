@@ -38,9 +38,9 @@ class hmi(object):
   def loadMotionControlProgram(self):
     if self.command:
       self.command.mode(emc.MODE_MDI)
-      self.command.wait_complete()
+      #self.command.wait_complete()
       self.command.mode(emc.MODE_AUTO)
-      self.command.wait_complete()
+      #self.command.wait_complete()
       if self.verbose:
           print "LOAD: Done state prepare"
       self.command.program_open("/tmp/MotionProgram.ngc")
@@ -77,11 +77,10 @@ class hmi(object):
     programString += "M3 S200\n"
 
     programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
-    programString += "G4 P %2.2f \n" % (formingDwell)
+    programString += "G4 P%2.2f \n" % (formingDwell)
 
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
-    programString += "M4\n "
-    programString += "; move to tube stop\n"
+    programString += "M5 S200\n "
     programString += "G1 X %2.2f F1000\n" % (tubeStopPositionX)
     programString += "G1 Y %2.2f \n" % (tubeStopPositionY)
     programString += "M30\n"
@@ -200,7 +199,11 @@ class hmi(object):
       if self.status.task_mode == emc.MODE_MANUAL:
         if velocity == 0:
           self.command.jog(emc.JOG_STOP, axis)
+          h['hydraulicAxisJog'] = 0
         else:
+          if axis == 1:
+            h['hydraulicAxisJog'] = 1
+            #time.sleep(0.1)
           self.command.jog(emc.JOG_CONTINUOUS, axis, velocity)
       else:
         print "cannot jog: machine not in manual"
@@ -541,6 +544,10 @@ class hmi(object):
     self.entryNumeric.set_text("")
     #self.numKeyWindow.show()    
   
+  def connectHalPins(self):
+    #connect the new pins to the system
+    processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", "hmi.hal"])
+  
   def __init__(self, stateMachine=None):
     
     self.command = emc.command()
@@ -559,6 +566,7 @@ class hmi(object):
       #print "-------------------------------------------"
       panel = gladevcp.makepins.GladePanel(h, "gui1.glade", self.builder, None)
       h.ready()
+      self.connectHalPins()
 
     self.s = storable()
     self.s.loadState()
@@ -577,16 +585,10 @@ class hmi(object):
     # load the current program
     self.createProgram()
     self.loadMotionControlProgram()
-                       
-    
-  
 
     # udpate display and button states, polling  etc
     gobject.timeout_add(150, self.updateControls)
     gobject.timeout_add(150, self.pollConnections)
-    
-
-      
 
 # enum states {   STATE_STANDBY = 0,
 #                 STATE_READY,
@@ -629,17 +631,13 @@ cycleStates = [ "CLOSEVICE",
                 "CYCLE",
                 "OPENVICE"]
 
-
-
 def printHalPins():
   #res = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-i", vars.emcini.get(), "-f", postgui_halfile])  
   processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "show", "pin", "hmi"])
   if processid:
     raise SystemExit, processid
 
-def connectHalPins():
-  #connect the new pins to the system
-  processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", "hmi.hal"])    
+    
     
 if __name__ == "__main__":
   try:
@@ -648,6 +646,9 @@ if __name__ == "__main__":
     h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
     h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
     h.newpin("enableJogButtons", hal.HAL_BIT, hal.HAL_IN)
+    h.newpin("hydraulicAxisJog", hal.HAL_BIT, hal.HAL_IN)
+    
+    #h.newpin("enableJogButtons", hal.HAL_BIT, hal.HAL_IN)
   
     h.newpin("requestManual", hal.HAL_BIT, hal.HAL_OUT)  
     h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
@@ -658,7 +659,7 @@ if __name__ == "__main__":
   
   try:    
     app = hmi()
-    connectHalPins()
+    
     
     gtk.main()    
   except KeyboardInterrupt:

@@ -1,0 +1,519 @@
+component machine "Machine Controller";
+
+description 
+"""
+Machine controller
+
+""";
+ 
+author "";
+
+license "GPL";
+
+option singleton yes;
+
+// // inputs
+
+pin in bit          mcb1 "mcb1";
+pin in bit          mcb2 "mcb2";
+pin in bit          mcb3 "mcb3";
+
+pin in bit          startButton;
+pin in bit          stopButton;
+
+pin in bit          viceSafetyRelay;
+pin in bit          eStopRelay;
+pin in bit          twoHandControlRelay;
+
+pin in bit          footPedal;
+pin in bit          startEdge;
+
+pin in bit          requestManual;
+
+pin in bit          motionComplete;
+
+pin in float        unclampTime;
+pin in float        cycleTimeOut;
+pin in float        readyTimeOut;
+
+pin in bit          viceOpenJog;
+pin in bit          viceCloseJog;
+pin in bit          hydraulicAxisJog;
+
+
+// // outputs
+pin out bit         viceOpenValve;
+pin out bit         viceCloseValve;
+pin out bit         dumpValve;
+pin out bit         hydraulicMotor;
+
+pin out bit         enableMotion;
+
+pin out bit         enableJogButtons;
+pin out bit         enableManual;
+
+pin out float       spindleSpeed;           // signal for spindle speed
+pin out bit         spindle;                // signal for starting spindle
+
+pin out bit         stateLocked;            // for disable buttons when may not change state
+
+pin out bit         error;
+
+
+pin out float       lastCycle;
+
+// communication pins
+
+pin out bit         machineOff;
+pin out bit         machineOn;
+pin in bit          isMachineOn;
+
+pin out bit         runProgram;
+pin in bit          isRunProgram;
+
+pin in bit          isModeAuto;
+pin in bit          isModeManual;
+pin out bit         modeAuto;
+pin out bit         modeManual;
+
+// pins from our sponsor...
+// Input Pins
+// pin in bit          start "Run Timer";
+
+// Output Pins
+// pin out u32         seconds "Seconds";
+// pin out u32         minutes "Minutes";
+// pin out u32         hours "Hours";
+
+// pin and variables
+pin out u32         currentState;          // for display in hmi
+
+pin out float       clampTimerRemain;
+pin out float       clampTimerRemainSeconds;
+
+//pin out float       spindleTimerRemain;
+
+pin out float       cycleTimerRemain;
+pin out float       readyTimerRemain;
+pin out float       readyTimerRemainSeconds;
+
+
+// Global Variables
+variable double totalnsec;
+variable int old_start;
+
+//variable double clampTimerRemain;
+//variable double spindleTimerRemain;
+
+variable double gPeriod;
+
+function _;
+
+;;
+
+// struct state {
+//     int number;
+// };
+
+#include "rtapi_math.h"
+
+// #include  "/usr/include/stdio.h"
+// #include  <stdio>
+
+enum states {   STATE_STANDBY = 0,
+                STATE_READY,
+                STATE_CLOSEVICE,
+                // STATE_STARTSPINDLE,
+                STATE_CYCLE,
+                STATE_OPENVICE,
+                STATE_MANUAL,
+                STATE_CYCLE_ABORT,
+                MAX_STATES }; //currentState;
+// states new_state;
+
+//currentState = STATE_STANDBY;
+
+//if we have changed state                
+bool state_entry = true;
+bool is_running_seen = false;
+
+static void change_state(struct state *inst, int new_state)
+{
+    state_entry = true;
+    currentState = new_state;
+}
+
+static float to_nanoseconds(struct state *inst, float seconds){
+    //return seconds * 0.000000001;
+    return seconds * 1000000000.0;
+}
+
+static float to_seconds(struct state *inst, float nanoseconds){
+    //return nanoseconds * 1000000000.0;
+    return nanoseconds * 0.000000001;
+}
+
+static void machine_on(struct state *inst){
+    if (!isMachineOn) {
+        machineOff = 0;
+        machineOn = 1;
+    } else {
+        machineOff = 0;
+        machineOn = 0;
+    }
+
+}
+
+static void machine_off(struct state *inst){
+    if (isMachineOn) {
+        machineOff = 1;
+        machineOn = 0;
+    } else {
+        machineOff = 0;
+        machineOn = 0;
+    }
+
+}
+
+//static void state_standby(struct state *inst, long period){
+static void state_standby(struct state *inst){
+    rtapi_print("in standby\n");
+
+    if (state_entry) {
+        state_entry = false;
+
+        hydraulicMotor = false;
+        //stateLocked = false;
+        enableJogButtons = false;
+    }
+
+    machine_off(inst);
+
+    if (requestManual){
+        change_state(inst, STATE_MANUAL);
+    }
+
+    //rtapi_print("in standby\n");
+
+    if (startButton) {
+        // go to ready state
+        change_state(inst, STATE_READY);
+    }
+}
+
+static void mode_auto(struct state *inst){
+    if (!isModeAuto){
+        modeAuto = 1;
+        modeManual = 0;
+    } else {
+        modeAuto = 0;
+        modeManual = 0;
+    }
+}
+
+static void mode_manual(struct state *inst){
+    if (!isModeManual){
+        modeAuto = 0;
+        modeManual = 1;
+    } else {
+        modeAuto = 0;
+        modeManual = 0;
+    }
+}
+
+static void state_ready(struct state *inst){
+    if (state_entry){
+        state_entry = false;
+        hydraulicMotor = true;
+        stateLocked = false;
+
+        readyTimerRemain = to_nanoseconds(inst, readyTimeOut);
+        // set a default if 0
+        if (readyTimerRemain <= 0.0)
+            readyTimerRemain = to_nanoseconds(inst, 300); // 5 minutes
+    }
+
+    machine_on(inst);
+    mode_auto(inst);
+
+
+    if (readyTimerRemain <= 0.0)
+        change_state(inst, STATE_STANDBY);
+
+    if (stopButton)
+        change_state(inst, STATE_STANDBY);
+
+    if (requestManual){
+        change_state(inst, STATE_MANUAL);
+    }
+
+    readyTimerRemain -= gPeriod; //decrement timer by period
+    
+    //if (footPedal)
+    if (startEdge){
+        change_state(inst, STATE_CLOSEVICE);
+        stateLocked = true;
+    }
+}
+
+static void set_vice_inactive(struct state *inst){
+    dumpValve = 0;
+    viceCloseValve = 0;
+    viceOpenValve = 0;
+}
+
+static void set_vice_off(struct state *inst){
+    //dumpValve = 0;
+    viceCloseValve = 0;
+    viceOpenValve = 0;
+}
+
+static void set_vice_open(struct state *inst){
+    dumpValve = 1;
+    viceCloseValve = 0;
+    viceOpenValve = 1;
+}
+
+static void set_vice_close(struct state *inst){
+    dumpValve = 1;
+    viceCloseValve = 1;
+    viceOpenValve = 0;
+}
+
+static void state_vice_close(struct state *inst){
+    if (state_entry){
+        state_entry = false;
+    }
+
+    if (footPedal)
+        set_vice_close(inst);  
+    else
+        set_vice_inactive(inst);
+
+    if (stopButton){
+        set_vice_inactive(inst);
+        change_state(inst, STATE_OPENVICE);
+    }
+
+    if (!viceSafetyRelay){
+        change_state(inst, STATE_CYCLE);
+        // set_vice_inactive(inst);
+        set_vice_close(inst);
+    }
+    //
+}
+
+void state_vice_open(struct state *inst){
+    bool exit = false;
+
+    if (state_entry){
+        state_entry = false;       
+
+        clampTimerRemain = to_nanoseconds(inst, unclampTime); // in nanoseconds, 1 second opening        
+
+        // set a default if 0
+        if (clampTimerRemain <= 0.0)
+            clampTimerRemain = to_nanoseconds(inst, 1.25);
+    }
+
+    machine_off(inst);
+
+    if (footPedal){
+        set_vice_open(inst);
+        clampTimerRemain -= gPeriod; //decrement timer by period
+    }
+    else
+        set_vice_inactive(inst);
+
+    if (clampTimerRemain <= 0.0)
+        exit = true;
+
+    // if (viceSafetyRelay)
+    //     exit = true;
+
+    if (exit){
+        change_state(inst, STATE_READY);
+        set_vice_inactive(inst);
+    }
+}
+
+static void run_program(struct state *inst){
+    if (!isRunProgram){
+        runProgram = 1;
+    } else {
+        runProgram = 0;
+        if (!is_running_seen)
+            is_running_seen = true;
+    }
+}
+
+static void state_cycle(struct state *inst){
+
+    bool exit = false;
+
+    if (state_entry){
+        state_entry = false;
+        // with a 25 second time-out
+        cycleTimerRemain = to_nanoseconds(inst, cycleTimeOut);
+
+        // set a default if 0
+        if (cycleTimerRemain <= 0.0)
+            cycleTimerRemain = to_nanoseconds(inst, 60.0);
+
+        //enableMotion = 1;
+        is_running_seen = false;
+    }
+
+    run_program(inst);
+
+    cycleTimerRemain -= gPeriod;
+
+    // exit code
+    if (cycleTimerRemain <= 0.0){
+        exit = true;
+        error = true;
+        // TODO: note that the motion did not complete correctly
+    }
+
+    if (stopButton){
+        // change_state(inst, )
+        // enableMotion = 0;
+        // TODO: Stop motion pin
+        exit = true;
+    }
+
+    // program is not running but has been seen running; exit
+    if (!isRunProgram && is_running_seen) {
+        exit = true;
+    }
+
+    if (exit)
+    {
+        //enableMotion = 0;
+        runProgram = 0;
+        change_state(inst, STATE_OPENVICE);
+    }
+
+}
+
+static void state_manual(struct state *inst){
+    bool exit = false;
+
+    if (state_entry){
+        state_entry = false;
+        enableManual = 1;
+    }
+
+    machine_on(inst);
+    mode_manual(inst);
+
+    if (startButton){
+        hydraulicMotor = 1;
+    } else if (stopButton){
+        hydraulicMotor = 0;
+    }
+
+    // TODO: this can now control the machine..
+    if (hydraulicMotor){        
+        enableManual = 1;
+    } else {
+        enableManual = 0;
+    }
+
+    if (hydraulicAxisJog){
+        dumpValve = true;
+    } else {
+        dumpValve = false;
+    }
+
+    if (!viceSafetyRelay){
+        // ok to jog
+        enableJogButtons = true;
+    } else {
+        enableJogButtons = false;
+    }
+
+    if (footPedal){
+        if (viceOpenJog){
+            set_vice_open(inst);
+        } else if (viceCloseJog){
+            set_vice_close(inst);
+        } else {
+            set_vice_off(inst);
+        }
+    } else {        
+        set_vice_off(inst);
+    }
+
+    if (!requestManual){
+        exit = true;
+    }
+
+    if (exit){
+        enableManual = 0;
+        enableJogButtons = false;
+
+        set_vice_inactive(inst);
+
+        if (hydraulicMotor)
+            change_state(inst, STATE_READY);
+        else
+            change_state(inst, STATE_STANDBY);
+    }
+}
+
+static void update_timer_outs(struct state *inst){    
+    clampTimerRemainSeconds = to_seconds(inst, clampTimerRemain);
+    readyTimerRemainSeconds = to_seconds(inst, readyTimerRemain);
+}
+
+FUNCTION(_) {
+
+    // always scanned
+    if (    !mcb1 
+        ||  !mcb2 
+        ||  !mcb3 
+        ||  eStopRelay )
+    {
+        error = true;
+    }
+    else
+        error = false;
+
+    update_timer_outs(inst);
+
+    // output last period to pin
+    lastCycle = period - gPeriod;
+    // store the current nanosecond period offset
+    gPeriod = period;
+
+    // switch on state
+    switch (currentState)
+    {
+        case STATE_STANDBY:
+            state_standby(inst);
+            break;
+        case STATE_READY:
+            state_ready(inst);
+            break;
+        case STATE_CLOSEVICE:
+            state_vice_close(inst);
+            break;
+        // case STATE_STARTSPINDLE:
+        //     state_startspindle(inst);
+        //     break;
+        case STATE_CYCLE:
+            state_cycle(inst);
+            break;
+        case STATE_OPENVICE:
+            state_vice_open(inst);
+            break;
+        case STATE_MANUAL:
+            state_manual(inst);
+            break;
+        case MAX_STATES:
+            state_ready(inst);
+            break;
+    }
+}
+

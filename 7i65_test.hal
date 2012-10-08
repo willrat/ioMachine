@@ -196,8 +196,9 @@ net spindleSpeed 	scale.2.out
 # ##################################################
 
 # create a signal for the estop loopback
-# net estop-loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
-setp iocontrol.0.emc-enable-in 1
+#net estop-loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
+setp iocontrol.0.emc-enable-in 	1
+setp motion.enable 				1
 
 # create signals for tool loading loopback
 net tool-prep-loop iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
@@ -257,10 +258,21 @@ net dump 			hm2_5i20.0.gpio.034.out     machine.dumpValve
 net viceOpen 		hm2_5i20.0.gpio.033.out     machine.viceOpenValve
 net viceClose 		hm2_5i20.0.gpio.032.out     machine.viceCloseValve
 
+# connect halui
+net machineOff		machine.machineOff			halui.machine.off
+net machineOn		machine.machineOn			halui.machine.on
+net isMachineOn		machine.isMachineOn			halui.machine.is-on
+
+net runProgram		machine.runProgram			halui.program.run
+net isRunProgram	machine.isRunProgram		halui.program.is-running
+
+net isModeAuto		machine.isModeAuto			halui.mode.is-auto
+net isModeManual	machine.isModeManual		halui.mode.is-manual
+net modeAuto		machine.modeAuto			halui.mode.auto
+net modeManual		machine.modeManual			halui.mode.manual
+
 # motion handler connections from machine module
-loadusr -W /home/user/linuxcnc/configs/test_area/motionHandler.py
-net enableMotion	motionHandler.enableMotion  machine.enableMotion
-net motionComplete 	motionHandler.motionComplete	machine.motionComplete
+#loadusr -W /home/user/linuxcnc/configs/test_area/motionHandler.py
 
 # load the hmi
 loadusr /home/user/linuxcnc/configs/test_area/gui1.py

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-10-07 15:28+0100\n"
+"POT-Creation-Date: 2012-10-07 15:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,43 +68,43 @@ msgstr ""
 msgid "Open Vice - Hold control to open vice"
 msgstr ""
 
-#: motionProgram.py:12
+#: motionProgram.py:22
 msgid "Program Name"
 msgstr ""
 
-#: motionProgram.py:13
-msgid "Forming Start Position X (mm)"
+#: motionProgram.py:23
+msgid "Forming Start Position X"
 msgstr ""
 
-#: motionProgram.py:14
-msgid "Forming Start Position Y (mm)"
+#: motionProgram.py:24
+msgid "Forming Start Position Y"
 msgstr ""
 
-#: motionProgram.py:15
-msgid "Forming Position Y  (mm)"
+#: motionProgram.py:25
+msgid "Forming Position Y"
 msgstr ""
 
-#: motionProgram.py:16
-msgid "Forming Feed  (mm/s)"
+#: motionProgram.py:26
+msgid "Forming Feed"
 msgstr ""
 
-#: motionProgram.py:17
-msgid "Forming Dwell (s)"
+#: motionProgram.py:27
+msgid "Forming Dwell"
 msgstr ""
 
-#: motionProgram.py:18
-msgid "Tube Stop Position X  (mm)"
+#: motionProgram.py:28
+msgid "Tube Stop Position X "
 msgstr ""
 
-#: motionProgram.py:19
-msgid "Tube Stop Position Y (mm)"
+#: motionProgram.py:29
+msgid "Tube Stop Position Y"
 msgstr ""
 
-#: motionProgram.py:20
-msgid "Vice Unclamp Timer (s)"
+#: motionProgram.py:30
+msgid "Vice Unclamp Timer"
 msgstr ""
 
-#: motionProgram.py:46
+#: motionProgram.py:56
 msgid "Default Program"
 msgstr ""
 
