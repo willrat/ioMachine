@@ -218,16 +218,16 @@ setp edge.0.out-width-ns 	1000000
 setp edge.0.in-edge 		0
 
 
-setp hm2_5i20.0.gpio.038.is_output 1
-setp hm2_5i20.0.gpio.037.is_output 1
+#setp hm2_5i20.0.gpio.038.is_output 1
+#setp hm2_5i20.0.gpio.037.is_output 1
 setp hm2_5i20.0.gpio.036.is_output 1
 setp hm2_5i20.0.gpio.035.is_output 1
 setp hm2_5i20.0.gpio.034.is_output 1
 setp hm2_5i20.0.gpio.033.is_output 1
 setp hm2_5i20.0.gpio.032.is_output 1
 
-setp hm2_5i20.0.gpio.038.invert_output 1
-setp hm2_5i20.0.gpio.037.invert_output 1
+#setp hm2_5i20.0.gpio.038.invert_output 1
+#setp hm2_5i20.0.gpio.037.invert_output 1
 setp hm2_5i20.0.gpio.036.invert_output 1
 setp hm2_5i20.0.gpio.035.invert_output 1
 setp hm2_5i20.0.gpio.034.invert_output 1
@@ -236,46 +236,53 @@ setp hm2_5i20.0.gpio.032.invert_output 1
 
 
 #0,1,2,3,5,6,7
-net mcb1 			hm2_5i20.0.gpio.047.in
-net mcb2 			hm2_5i20.0.gpio.046.in
-net mcb3 			hm2_5i20.0.gpio.045.in
-net stopButton 		hm2_5i20.0.gpio.044.in_not	machine.stopButton
-net startButton 	hm2_5i20.0.gpio.043.in_not	machine.startButton
+net mcb1 					hm2_5i20.0.gpio.047.in_not
+net mcb2 					hm2_5i20.0.gpio.046.in_not
+net mcb3 					hm2_5i20.0.gpio.045.in_not
+net stopButton 				hm2_5i20.0.gpio.044.in_not		machine.stopButton
+net startButton 			hm2_5i20.0.gpio.043.in_not		machine.startButton
 
-net viceRelay 		hm2_5i20.0.gpio.042.in     	machine.viceSafetyRelay
-net estopRelay 		hm2_5i20.0.gpio.041.in
-net twoHandRelay	hm2_5i20.0.gpio.040.in
+net viceRelay 				hm2_5i20.0.gpio.042.in_not     	machine.viceSafetyRelay
+net eStopRelay 				hm2_5i20.0.gpio.041.in_not
+net twoHandRelay			hm2_5i20.0.gpio.040.in_not
+net twoHandStart			hm2_5i20.0.gpio.040.in
 
-net footPedal		hm2_5i20.0.gpio.039.in_not 	machine.footPedal
-net footPedal		edge.0.in
-net footPedalEdge	edge.0.out 					machine.startEdge
+# footpedal means the signal to operate.. this may be a 2hand control
+net twoHandStart			machine.footPedal
+#net footPedal		hm2_5i20.0.gpio.039.in_not 	machine.footPedal
 
-net output1 		hm2_5i20.0.gpio.038.out
-net output2 		hm2_5i20.0.gpio.037.out
-net output3 		hm2_5i20.0.gpio.036.out
-net hydraulic 		hm2_5i20.0.gpio.035.out     machine.hydraulicMotor
-net dump 			hm2_5i20.0.gpio.034.out     machine.dumpValve
-net viceOpen 		hm2_5i20.0.gpio.033.out     machine.viceOpenValve
-net viceClose 		hm2_5i20.0.gpio.032.out     machine.viceCloseValve
+net twoHandStart			edge.0.in
+net startEdge				edge.0.out 					machine.startEdge
+
+net viceSwitchDiagnostic	hm2_5i20.0.gpio.038.in_not
+net guardSwitchDiagnostic 	hm2_5i20.0.gpio.037.in_not
+
+#net output3 				hm2_5i20.0.gpio.036.out
+net hydraulic 				hm2_5i20.0.gpio.036.out 	machine.hydraulicMotor
+#net hydraulic 				hm2_5i20.0.gpio.035.out     machine.hydraulicMotor
+net dump 					hm2_5i20.0.gpio.034.out     machine.dumpValve
+net viceOpen 				hm2_5i20.0.gpio.033.out     machine.viceOpenValve
+net viceClose 				hm2_5i20.0.gpio.032.out     machine.viceCloseValve
 
 # connect halui
-net machineOff		machine.machineOff			halui.machine.off
-net machineOn		machine.machineOn			halui.machine.on
-net isMachineOn		machine.isMachineOn			halui.machine.is-on
+net machineOff				machine.machineOff			halui.machine.off
+net machineOn				machine.machineOn			halui.machine.on
+net isMachineOn				machine.isMachineOn			halui.machine.is-on
 
-net runProgram		machine.runProgram			halui.program.run
-net isRunProgram	machine.isRunProgram		halui.program.is-running
+net runProgram				machine.runProgram			halui.program.run
+net isRunProgram			machine.isRunProgram		halui.program.is-running
 
-net isModeAuto		machine.isModeAuto			halui.mode.is-auto
-net isModeManual	machine.isModeManual		halui.mode.is-manual
-net modeAuto		machine.modeAuto			halui.mode.auto
-net modeManual		machine.modeManual			halui.mode.manual
+net isModeAuto				machine.isModeAuto			halui.mode.is-auto
+net isModeManual			machine.isModeManual		halui.mode.is-manual
+net modeAuto				machine.modeAuto			halui.mode.auto
+net modeManual				machine.modeManual			halui.mode.manual
 
 # motion handler connections from machine module
 #loadusr -W /home/user/linuxcnc/configs/test_area/motionHandler.py
 
 # load the hmi
-loadusr /home/user/linuxcnc/configs/test_area/gui1.py
+#loadusr /home/user/linuxcnc/configs/test_area/gui1.py
+loadusr /home/user/installation/gui1.py
 # commands in hmi.hal will be called after setup of module
 
 # do this last to avoid watchdog

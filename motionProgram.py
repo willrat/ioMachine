@@ -1,13 +1,17 @@
-#
-#
-# things we want to pickle
 
 import emc
 import os
 import gettext
 import copy
 
-gettext.install('machine')
+import language
+
+#lang1 = gettext.translation('machine', localedir='./locale', languages=['en'], fallback=True)
+#lang2 = gettext.translation('machine', localedir='./locale', languages=['fi'], fallback=True)
+##lang2.install()
+#lang1.install()
+
+#gettext.install('machine')
 
 #parameters = [ _('Program Name'),
 #               _('Forming Start Position X (mm)'),
@@ -77,6 +81,13 @@ class motionProgram():
     for item in self.program:
       if parameters[counter] == parameter:
         return self.program[counter]
+      counter = counter + 1
+
+  def getParameterLabel(self, index):
+    return parameters[int(index)]
+
+#  def langChange(self):
+#    lang1.install()
 
 ## TODO: this need to reference the gremlin to update
 

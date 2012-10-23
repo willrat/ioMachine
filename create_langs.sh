@@ -4,5 +4,4 @@ xgettext -d machine -o locale/machine.pot \
 			storable.py \
 			keyboard.py \
 			motionProgram.py \
-			motionHandler.py \
 			gui1.glade

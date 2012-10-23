@@ -11,7 +11,7 @@ CONFIG="firmware=hm2/5i20/2X7I65_72.BIT num_encoders=0 num_pwmgens=0 num_stepgen
 [EMC]
 
 # Name of machine, for use with display, etc.
-MACHINE =               TestMachine
+MACHINE =               TubeEndformer
 
 # Debug level, 0 means no messages. See src/emc/nml_int/emcglb.h for others
 #DEBUG =                0x00000003
@@ -25,6 +25,7 @@ DEBUG = 0
 
 # Name of display program, e.g., tkemc
 DISPLAY =              axis
+#DISPLAY =              /home/user/linuxcnc/configs/test_area/gui1.py
 
 # Cycle time, in seconds, that display will sleep between polls
 CYCLE_TIME =            0.0500
@@ -49,6 +50,7 @@ INTRO_GRAPHIC =         linuxcnc.gif
 INTRO_TIME =            0
 
 EDITOR = 				gedit
+OPEN_FILE = 			""
 
 [FILTER]
 PROGRAM_EXTENSION = .png,.gif,.jpg Grayscale Depth Image
@@ -104,12 +106,11 @@ SERVO_PERIOD =          1000000
 
 HALFILE = 7i65_test.hal
 
+HALUI   = halui
+
 # list of halcmd commands to execute
 # commands are executed in the order in which they appear
 #HALCMD =               save neta
-
-
-
 
 [TRAJ]
 
@@ -132,23 +133,28 @@ NO_FORCE_HOMING = 		1
 [AXIS_0]
 
 TYPE =                  LINEAR
-MAX_VELOCITY =          30.0
-MAX_ACCELERATION =      100.0
+# MAX_VELOCITY =          30.0
+# MAX_ACCELERATION =      20.0
+MAX_VELOCITY =          50.0
+MAX_ACCELERATION =      50.0
+
 BACKLASH =              0.000
 # FERROR =                1.5
 # MIN_FERROR =            1.4
-FERROR =                25
-MIN_FERROR =            25
+FERROR =                5
+MIN_FERROR =            5
 
 INPUT_SCALE =           10
+INPUT_OFFSET = 			0
 
 OUTPUT_SCALE =          1.000
 OUTPUT_OFFSET =         0.0
-MAX_OUTPUT =            0.8
+MAX_OUTPUT =            1
 
-MIN_LIMIT =             5.0
+MIN_LIMIT =             0.0
 MAX_LIMIT =             100.0
-HOME =                  0.000
+
+HOME =                  50.0
 HOME_OFFSET =           0
 HOME_SEARCH_VEL =       0
 HOME_LATCH_VEL =        0
@@ -156,9 +162,9 @@ HOME_USE_INDEX =        NO
 HOME_IGNORE_LIMITS =    YES
 
 # PID tuning params
-DEADBAND =              0.25
-P =                     0.15
-I =                     0
+DEADBAND =              0.5
+P =                     0.17
+I =                     0.08
 D =                     0
 FF0 =                   0
 FF1 =                   0
@@ -171,18 +177,22 @@ BIAS =                  0
 [AXIS_1]
 
 TYPE =                  LINEAR
-MAX_VELOCITY =          5.0
-MAX_ACCELERATION =      30.0
+# MAX_VELOCITY =          5.0
+# MAX_ACCELERATION =      50.0
+MAX_VELOCITY =          12.0
+MAX_ACCELERATION =      50.0
+
 BACKLASH =              0.000
 
-FERROR =                25
-MIN_FERROR =            25
+FERROR =                3
+MIN_FERROR =            3
 # FERROR =                0.9
 # MIN_FERROR =            0.75
 
 
 # 75mm over 0..10V then 30deg angle therefore * 7.5*tan(30)=4.33012
 INPUT_SCALE =           4.33012
+INPUT_OFFSET = 			-16.3
 
 OUTPUT_SCALE =          1.000
 OUTPUT_OFFSET =         0.0
@@ -191,7 +201,7 @@ MAX_OUTPUT =            1
 # MIN_LIMIT =             -0.5
 # MAX_LIMIT =             28
 MIN_LIMIT =             -0.5
-MAX_LIMIT =             60
+MAX_LIMIT =             24
 
 HOME =                  0.000
 HOME_OFFSET =           0
@@ -201,8 +211,8 @@ HOME_USE_INDEX =        NO
 HOME_IGNORE_LIMITS =    YES
 
 # PID tuning params
-DEADBAND =              0.1
-P =                     2
+DEADBAND =              0.25
+P =                     0.7
 I =                     0.2
 D =                     0
 FF0 =                   0

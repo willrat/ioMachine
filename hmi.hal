@@ -1,17 +1,33 @@
 # what would be called POSTGUI...
 
-net currentState 		machine.currentState 		hmi.currentState
-net manualRequest 		machine.requestManual		hmi.requestManual
+net 	currentState 				machine.currentState 			hmi.currentState
+net 	manualRequest 				machine.requestManual			hmi.requestManual
 
-show pin hmi.unclampTime
+# debug
+#show pin hmi.unclampTime
 
-net unclampTime			machine.unclampTime			hmi.unclampTime
+net 	unclampTime					machine.unclampTime				hmi.unclampTime
 
-net viceOpenToggle		machine.viceOpenJog			hmi.viceOpenToggle
-net viceCloseToggle		machine.viceCloseJog		hmi.viceCloseToggle
+net 	viceOpenToggle				machine.viceOpenJog				hmi.viceOpenToggle
+net 	viceCloseToggle				machine.viceCloseJog			hmi.viceCloseToggle
 
-net enableJogButtons	machine.enableJogButtons	hmi.enableJogButtons
-net hydraulicAxisJog	machine.hydraulicAxisJog	hmi.hydraulicAxisJog
+net 	enableJogButtons			machine.enableJogButtons		hmi.enableJogButtons
+net 	hydraulicAxisJog			machine.hydraulicAxisJog		hmi.hydraulicAxisJog
+
+net 	mcb1						hmi.mcb1Led
+net 	mcb2						hmi.mcb2Led
+net 	mcb3						hmi.mcb3Led
+
+net 	stopButton 					hmi.stopButtonLed
+net 	startButton 				hmi.startButtonLed
+
+net 	viceRelay 					hmi.viceRelayLed
+net 	eStopRelay 					hmi.eStopRelayLed
+net 	twoHandRelay				hmi.twoHandRelayLed
+
+net 	viceSwitchDiagnostic		hmi.viceSwitchDiagnosticLed
+net 	guardSwitchDiagnostic 		hmi.guardSwitchDiagnosticLed
+
 
 #    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
 #    h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)

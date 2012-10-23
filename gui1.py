@@ -12,21 +12,27 @@ import hal
 import emc
 import os
 
+import language
+
 from storable import storable
 from motionProgram import motionProgram
+from keyboard import touchKeyboard
 
 import gettext
 import locale
 
-APPLICATION_DOMAIN = 'machine'
-
-locale.setlocale(locale.LC_ALL, "fi_FI.utf8")
-locale.bindtextdomain(APPLICATION_DOMAIN, './locale')
-
-lang1 = gettext.NullTranslations()
-lang2 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=['fi'], fallback=True)
-
-lang2.install()
+FINAL = True
+#APPLICATION_DOMAIN = 'machine'
+#
+##locale.setlocale(locale.LC_ALL, "fi_FI.utf8")
+#locale.setlocale(locale.LC_ALL, "en_GB.utf8")
+#locale.bindtextdomain(APPLICATION_DOMAIN, './locale')
+#
+#lang1 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=['en'], fallback=True)
+#lang2 = gettext.translation(APPLICATION_DOMAIN, localedir='./locale', languages=['fi'], fallback=True)
+#
+##lang2.install()
+#lang1.install()
 
 class hmi(object):
     
@@ -71,9 +77,10 @@ class hmi(object):
     programString += "; program for %s\n" % (programName)
     programString += ";rapid to safe position\n"
     programString += "G0 Y0\n"
-    programString += "G0 X100\n"
 
-    programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
+    #programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
+    # rapid to start position
+    programString += "G0 X %2.2f Y %2.2f \n" % (startPositionX, startPositionY)
     programString += "M3 S200\n"
 
     programString += "G1 Y %2.2f F %2.2f \n" % (formingPositionY, formingFeed)
@@ -81,8 +88,9 @@ class hmi(object):
 
     programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositionX, startPositionY)
     programString += "M5 S200\n "
-    programString += "G1 X %2.2f F1000\n" % (tubeStopPositionX)
+    programString += "G1 X %2.2f F1000\n" % (float(tubeStopPositionX + 1))
     programString += "G1 Y %2.2f \n" % (tubeStopPositionY)
+    programString += "G1 X %2.2f F500\n" % (float(tubeStopPositionX))
     programString += "M30\n"
     
     #programString += "G1 X %2.2f Y %2.2f F1000\n" % (startPositonX, startPositonY)
@@ -168,6 +176,13 @@ class hmi(object):
 #    else:
 #      print "no viceOpenToggle"
 
+  def on_xJogSpeed_value_changed(self, adjustment):
+    pass
+  
+  def on_yJogSpeed_value_changed(self, adjustment):
+    pass
+
+  # velocity information used for direction only now
   def on_jogZPlus_pressed(self, widget, data=None):
     self.jogAxis(0, 75)
 
@@ -193,8 +208,26 @@ class hmi(object):
     self.jogAxis(1, 0)
 
 
+  #def jogAxis(self, axis, velocity):
   def jogAxis(self, axis, velocity):
-    if self.command and self.status:
+    
+    axisSpeed = 0
+    
+    if axis==0:
+      axisSpeed = self.xJogSpeed.value
+    elif axis == 1:
+      axisSpeed = self.yJogSpeed.value
+
+    print "axis speed %s" % (axisSpeed)
+
+    if velocity == 0:
+      pass
+    elif velocity < 0:
+      velocity = -axisSpeed
+    else:
+      velocity = axisSpeed
+       
+    if self.command and self.status:  
       self.status.poll()
       if self.status.task_mode == emc.MODE_MANUAL:
         if velocity == 0:
@@ -240,6 +273,8 @@ class hmi(object):
       page = notebook.get_nth_page(pageNumber)
       if page:
         page.set_sensitive(False)
+    
+    self.builder.get_object("editProgram").set_sensitive(False)
     
   def setPagesActive(self):
     notebook = self.builder.get_object("notebook1")
@@ -314,7 +349,7 @@ class hmi(object):
     # update the position display
     if self.status:
       self.status.poll()
-      positionText = 'Z: % 2.2f X: % 2.2f' % (self.status.actual_position[0], self.status.actual_position[1])
+      positionText = 'X: % 2.2f Y: % 2.2f' % (self.status.actual_position[0], self.status.actual_position[1])
 
       self.positionLabel = self.builder.get_object("positionLabel1")
       if self.positionLabel:
@@ -327,6 +362,7 @@ class hmi(object):
     elif label:
       label.set_text("cannot get machine state")
 
+    # set jog buttons off if the 
     # TODO: Read if jog OK
     jogButtonBox = self.builder.get_object("jogButtonBox")
     if jogButtonBox:
@@ -334,6 +370,23 @@ class hmi(object):
         jogButtonBox.set_sensitive(True)
       else:
         jogButtonBox.set_sensitive(False)
+
+    # update statuas label at top of screen
+    statusLabel = self.builder.get_object("statusLabel")
+    statusText = ""
+    statusText += _("Current Status: ")
+    try:
+      statusText += stateTextVerbose[h['currentState']]
+    except:
+      statusText += _("ERROR could not get status")
+      
+    statusLabel.set_text(statusText)
+
+    # disable controls when the program runs     
+    if self.currentStateString in cycleStates:
+      self.builder.get_object("editProgram").set_sensitive(False)
+    else:
+      self.builder.get_object("editProgram").set_sensitive(True)
 
     return True
 
@@ -357,6 +410,17 @@ class hmi(object):
     self.programDialog.present()
     self.programDialog.fullscreen()
 
+  def loadCurrent(self):    
+    self.createProgram()
+    self.loadMotionControlProgram()
+    self.builder.get_object("hal_gremlin1").expose()
+    
+    # this list store is used to display the current program
+    # on the auto page so need the new program loading into
+    # it
+    self.programListStore.clear()
+    self.currentProgram.fillListStore(self.programListStore)
+
   def on_newProgramButton_clicked(self, button):
     
     # add a copy of the current program
@@ -365,9 +429,7 @@ class hmi(object):
     newIndex = len(self.programs)
     self.programs.append(newProgram)
     self.setCurrent(newIndex)
-    self.currentProgram = newProgram
-    
-      
+    self.currentProgram = newProgram  
     self.buildProgramList()    
     self.editCurrent()
 
@@ -379,16 +441,7 @@ class hmi(object):
     #print self.programs[cursor[0][0]]        
     self.setCurrent(cursor[0][0])
     # load data into motion control etc
-    self.createProgram()
-    self.loadMotionControlProgram()
-
-  #
-  #  System screen callbacks
-  #
-  def on_changeLanguageButton_clicked(self, button):
-    #on_changeLanguageButton_clicked
-    print "change language button clicked"
-    lang1.install()
+    self.loadCurrent()
 
   #
   #  program edit dialog methods
@@ -410,12 +463,11 @@ class hmi(object):
     
 #    for item in self.listStore:
 #        print item
-    #self.currentProgram = []
     
     # copy the values from the list store back into the 
     # current program array 
     for i, item in enumerate(self.programListStore):
-        print "transfer: %s" % [item[0], item[1]]
+        #print "transfer: %s" % [item[0], item[1]]
         self.currentProgram.program[i] = item[1]
         #self.currentProgram.append(item[1])
 
@@ -425,56 +477,80 @@ class hmi(object):
         print line
 
     # create ngc file, load to motion, update gremlin, 'close' window    
-    self.createProgram()
-    self.loadMotionControlProgram()
-    self.builder.get_object("hal_gremlin1").expose()        
+#    self.createProgram()
+#    self.loadMotionControlProgram()
+#    self.builder.get_object("hal_gremlin1").expose()
+    self.loadCurrent()        
     self.programDialog.iconify()
     self.buildProgramList()
     self.s.saveState()
 
   def on_editing_started(self, cellrenderer, editable, path, user_param1=None):
-    print "on editing started"
-    #self.builder.get_object("")
-    
-    self.numKeyWindow.present()
-    self.numKeyWindow.fullscreen()
+    #print "on editing started"    
+    self.keyb.getWindow().present()
+    self.keyb.reset()
     # store the row we are editing
     self.editingPath = path
+#    try:
+#      index = int(path)
+#    except:
+#      index = 0
+#      print "COULD NOT CONVERT PATH TO INDEX"
+      
+    print "Editing started: path %s" % path
     
+    #load the current string on for editing....    
+    self.keyb.setString(self.programListStore[self.editingPath][1])
+    
+    # TODO: we could have a box displaying current value for reference
+    self.keyb.setParameterLabel(self.currentProgram.getParameterLabel(path))
+    
+  
+  #
+  #  system screen
+  #  
+  
+  def on_shutdownButton_clicked(self, button):
+    processid = os.spawnvp(os.P_WAIT, "sudo", ["sudo", "halt"])
+    if processid:
+      print "shutdown failed"
+      #raise SystemExit, processid
+    pass
+  
+  def on_restartButton_clicked(self, button):
+    processid = os.spawnvp(os.P_WAIT, "sudo", ["sudo", "reboot"])
+    if processid:
+      print "restart failed"  
+    pass
+  
+  def on_changeLanguageButton_clicked(self, button):
+    pass
+    #on_changeLanguageButton_clicked
+    # DOES NOT WORK.... Changing language on the fly is not very good
+    # at the moment on this platform
+    
+#    print "change language button clicked"
+#    lang1.install()
+#    
+#    locale.setlocale(locale.LC_ALL, "en_GB.utf8")
+#    locale.bindtextdomain(APPLICATION_DOMAIN, './locale')
+    
+#    self.window1.destroy()
+#    self.programDialog.destroy()
+#    self.keyb.getWindow().destroy()
+#    
+#    self.initAll()
+#    self.fillLists()
+
+
 
   #
   #  methods for the on screen keyboard
   #
-  
-  def on_keyboard_button_press(self, button):
-    text = button.get_label()
-    print "button %s pressed" % text
-    
-    currentText = self.entryNumeric.get_text()
-    
-    if text == '-' and len(currentText) > 0:
-        return
-    
-    if text == '.' and currentText.count('.') > 0:
-        return
-    
-    self.entryNumeric.set_text(currentText + text)
-  
+
   def on_entryOK_clicked(self, button):
-    #self.builder.get_object("")
-    inputText = self.entryNumeric.get_text()
-    
-#    if inputText.isdigit():
-#        print "is digit"
-        
+    inputText = self.keyb.getString()    
     self.programListStore[self.editingPath][1] = inputText
-    #self.numKeyWindow.hide()   
-    self.entryNumeric.set_text("")
-    self.numKeyWindow.iconify()
-    
-  def on_entryCancel_clicked(self, button):
-    self.entryNumeric.set_text("")
-    self.numKeyWindow.iconify()
 
   #
   #  init etc...
@@ -506,12 +582,16 @@ class hmi(object):
     self.builder.add_from_file("gui1.glade")
 
     settings = gtk.settings_get_default()
-    settings.set_string_property("gtk-font-name", "Sans 16", "")
+    settings.set_string_property("gtk-font-name", "Sans 14", "")
 
     self.builder.connect_signals(self)
     self.window1 = self.builder.get_object("window1")
     
-    #self.window1.fullscreen()
+    #to set vars
+    self.pollConnections()
+    
+    if FINAL:
+      self.window1.fullscreen()
     self.window1.show()
 
 
@@ -524,29 +604,35 @@ class hmi(object):
     self.programTreeView = self.builder.get_object("treeview2")
     self.programListStore = self.builder.get_object("liststore2")
     self.programListStore.clear()
+
+    self.xJogSpeed = self.builder.get_object("xJogSpeed")
+    self.yJogSpeed = self.builder.get_object("yJogSpeed")
     
-  def initNumericKeyboard(self):
-    print ""
-    self.numKeyWindow = self.builder.get_object("numericKey")
-    self.entryNumeric = self.builder.get_object("entry-numeric")
-    
-    buttons = range(10)
-    buttons.append("minus")
-    buttons.append("dot")
-    #print buttons
-    
-    for button in buttons:
-      string = "button-%s" % button 
-      #print string 
-      item = self.builder.get_object(string)
-      item.connect("clicked", self.on_keyboard_button_press)
-    
-    self.entryNumeric.set_text("")
-    #self.numKeyWindow.show()    
+    jogButtons = self.builder.get_object("jogButtonBox")
+    for item in jogButtons:
+      print item
+      if type(item) == gtk.Button or type(item) == gladevcp.HAL_Button:
+
+        print "Button : %s " % item.get_label()
+        item.set_size_request(200, 80)
+  
+  def initKeyboard(self):
+    self.keyb = touchKeyboard()
+    self.keyb.getOKButton().connect("clicked", self.on_entryOK_clicked)
   
   def connectHalPins(self):
     #connect the new pins to the system
-    processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", "hmi.hal"])
+    postgui_halfile = "/home/user/installation/hmi.hal"
+    processid = os.spawnvp(os.P_WAIT, "halcmd", ["halcmd", "-f", postgui_halfile])
+  
+  def initAll(self):
+    self.initGui()
+    self.initKeyboard()
+  
+  def fillLists(self):
+    self.buildProgramList()
+    self.currentProgram.fillListStore(self.programListStore)
+    pass
   
   def __init__(self, stateMachine=None):
     
@@ -555,9 +641,9 @@ class hmi(object):
     
     self.verbose = True
     
-    # setup gtk elements
-    self.initGui()
-    self.initNumericKeyboard()
+    self.initAll()
+#    self.initGui()
+#    self.initKeyboard()
 
     # check for hal
     if h:
@@ -570,7 +656,7 @@ class hmi(object):
 
     self.s = storable()
     self.s.loadState()
-    self.buildProgramList()
+#    self.buildProgramList()
 
     # load the first program as the current...
     # TODO: save the last used program 
@@ -580,7 +666,8 @@ class hmi(object):
     self.setCurrent(self.s.currentIndex)
     
     # fill the list store based on the current program
-    self.currentProgram.fillListStore(self.programListStore)  
+ #   self.currentProgram.fillListStore(self.programListStore)
+    self.fillLists()
     
     # load the current program
     self.createProgram()

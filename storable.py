@@ -20,6 +20,7 @@ class storable():
     # plus other things we might need to keep
     # track here....
     self.currentIndex = 0
+    self.language = ""
     
   def getPrograms(self):
     return self.programs

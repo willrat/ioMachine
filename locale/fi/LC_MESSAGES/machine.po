@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: machine\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-10-05 13:11+0100\n"
+"POT-Creation-Date: 2012-10-09 23:06+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -11,281 +11,274 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Finnish\n"
 
-#: gui1.py:71
-msgid "Default Program"
+#: gui1.py:306
+msgid "Current Program:"
 msgstr ""
 
-#: gui1.py:387
-msgid "Current Program: "
-msgstr "Nykyinen Ohjelma:"
+#: gui1.py:342
+msgid "Current Status: "
+msgstr ""
 
-#: gui1.py:723
+#: gui1.py:346
+msgid "ERROR could not get status"
+msgstr ""
+
+#: gui1.py:596
 msgid "Standby"
-msgstr ""
+msgstr "Valmiustila"
 
-#: gui1.py:724
+#: gui1.py:597
 msgid "Ready"
-msgstr ""
+msgstr "Valmis"
 
-#: gui1.py:725
+#: gui1.py:598
+#: gui1.glade:416
 msgid "Close Vice"
-msgstr ""
+msgstr "Sulje leuka"
 
-#: gui1.py:726
-#: gui1.py:735
-msgid "Start Spindle"
-msgstr ""
-
-#: gui1.py:727
+#: gui1.py:600
 msgid "Cycle"
-msgstr ""
+msgstr "Työkierto"
 
-#: gui1.py:728
+#: gui1.py:601
+#: gui1.glade:399
 msgid "Open Vice"
-msgstr ""
+msgstr "Avaa leuka"
 
-#: gui1.py:729
-#: gui1.py:738
+#: gui1.py:602
+#: gui1.py:611
 msgid "Manual"
-msgstr ""
+msgstr "Käsiajo"
 
-#: gui1.py:730
-#: gui1.py:739
+#: gui1.py:603
+#: gui1.py:612
 msgid "Cycle Aborted"
 msgstr ""
 
-#: gui1.py:732
+#: gui1.py:605
 msgid "Standby - Press start"
-msgstr ""
+msgstr "Valmiustila - Paina käynnistys"
 
-#: gui1.py:733
+#: gui1.py:606
 msgid "Ready - Hold control for cycle"
-msgstr ""
+msgstr "Valmis - Pidä ohjaus aloittaaksesi työkierto"
 
-#: gui1.py:734
+#: gui1.py:607
 msgid "Close Vice - Hold control to close vice"
-msgstr ""
+msgstr "Sulje leuka - Pidä ohjaus sulkeaksesi leuka"
 
-#: gui1.py:736
+#: gui1.py:609
 msgid "Cycle - Forming tube"
-msgstr ""
+msgstr "Työkierto - muotoillaan putkea"
 
-#: gui1.py:737
+#: gui1.py:610
 msgid "Open Vice - Hold control to open vice"
-msgstr ""
+msgstr "Avaa leuka - Pidä ohjaus avaaksesi leuka"
 
-#: gui1.py:747
+#: motionProgram.py:22
 msgid "Program Name"
-msgstr ""
+msgstr "Ohjelma nimi"
 
-#: gui1.py:748
+#: motionProgram.py:23
 msgid "Forming Start Position X"
-msgstr "lomake alkuasennossa"
+msgstr "Muotoilu Aloitus Asema X"
 
-#: gui1.py:749
+#: motionProgram.py:24
 msgid "Forming Start Position Y"
-msgstr ""
+msgstr "Muotoilu Aloitus Asema Y"
 
-#: gui1.py:750
-msgid "Position To Tube Y"
-msgstr "Asema putkeen Y"
-
-#: gui1.py:751
-msgid "Position To Tube Feed"
-msgstr "Asema putkeen Feed"
-
-#: gui1.py:752
+#: motionProgram.py:25
 msgid "Forming Position Y"
-msgstr ""
+msgstr "Putken Muokkaus Y"
 
-#: gui1.py:753
+#: motionProgram.py:26
 msgid "Forming Feed"
-msgstr ""
+msgstr "Muokkaus Nopeus"
 
-#: gui1.py:754
+#: motionProgram.py:27
 msgid "Forming Dwell"
-msgstr ""
+msgstr "Putken Muokkauksen Aika"
 
-#: gui1.py:755
-msgid "Tube Stop Position X"
-msgstr ""
+#: motionProgram.py:28
+msgid "Tube Stop Position X "
+msgstr "Putken Rajoitin Mitta X"
 
-#: gui1.py:756
+#: motionProgram.py:29
 msgid "Tube Stop Position Y"
+msgstr "Putken Rajoitin Mitta Y"
+
+#: motionProgram.py:30
+msgid "Vice Unclamp Timer"
 msgstr ""
 
-#: motionHandler.py:89
-msgid "Motion Waiting"
-msgstr ""
-
-#: motionHandler.py:104
-msgid "Motion Enable"
-msgstr ""
-
-#: motionHandler.py:125
-msgid "Motion Auto Start"
-msgstr ""
-
-#: motionHandler.py:184
-msgid "Motion In Progress"
-msgstr ""
-
-#: motionHandler.py:201
-msgid "Motion Finalising"
+#: motionProgram.py:56
+msgid "Default Program"
 msgstr ""
 
 #: gui1.glade:45
-#: gui1.glade:365
-#: gui1.glade:448
-msgid "label"
+msgid "STATUS: etc etc"
 msgstr ""
 
-#: gui1.glade:83
-msgid "EDIT"
-msgstr ""
-
-#: gui1.glade:122
-#: gui1.glade:509
-msgid "Current Program Name\n"
-msgstr ""
-
-#: gui1.glade:141
+#: gui1.glade:85
 msgid "CYCLE"
-msgstr ""
+msgstr "Työkierto"
 
-#: gui1.glade:156
-msgid "TOOL CHANGE"
-msgstr ""
-
-#: gui1.glade:171
+#: gui1.glade:100
 msgid "STOP POSITION"
 msgstr ""
 
-#: gui1.glade:238
-msgid "AUTO"
+#: gui1.glade:115
+msgid "EDIT"
+msgstr "Muokkaa"
+
+#: gui1.glade:156
+msgid "tool path display"
 msgstr ""
 
-#: gui1.glade:284
+#: gui1.glade:208
+msgid "<b>frame2</b>"
+msgstr ""
+
+#: gui1.glade:232
+msgid "AUTO"
+msgstr "AUTOMAATTINEN"
+
+#: gui1.glade:277
 msgid "Z +"
 msgstr ""
 
-#: gui1.glade:297
+#: gui1.glade:292
 msgid "Z -"
 msgstr ""
 
-#: gui1.glade:310
+#: gui1.glade:307
 msgid "X +"
 msgstr ""
 
-#: gui1.glade:323
+#: gui1.glade:322
 msgid "X -"
 msgstr ""
 
-#: gui1.glade:341
+#: gui1.glade:342
 msgid "<b>Position Jog</b>"
+msgstr "<b> Siirtoliike<b>"
+
+#: gui1.glade:365
+#: gui1.glade:505
+msgid "label"
 msgstr ""
 
 #: gui1.glade:373
 msgid "<b>Position</b>"
+msgstr "<b>Asema</b>"
+
+#: gui1.glade:446
+msgid "Vice Closed"
+msgstr "Leuka Kiinni"
+
+#: gui1.glade:471
+msgid "status"
 msgstr ""
 
-#: gui1.glade:400
-msgid "Vice Open"
-msgstr ""
-
-#: gui1.glade:414
-msgid "Vice Close"
-msgstr ""
-
-#: gui1.glade:433
+#: gui1.glade:490
 msgid "<b>Vice Control</b>"
-msgstr ""
+msgstr "<b>Leuan Ohjaus</b>"
 
-#: gui1.glade:496
+#: gui1.glade:553
 msgid "MANUAL"
-msgstr "käsikäyttöinen"
+msgstr "KÄSIAJO"
 
-#: gui1.glade:561
+#: gui1.glade:566
+msgid "Current Program Name\n"
+msgstr "Tämänhetkisen Ohjelman Nimi\n"
+
+#: gui1.glade:619
 msgid "New"
-msgstr ""
+msgstr "Uusi"
 
-#: gui1.glade:575
-msgid "Load"
-msgstr ""
+#: gui1.glade:633
+#, fuzzy
+msgid "Open"
+msgstr "Avaa leuka"
 
-#: gui1.glade:603
+#: gui1.glade:686
 msgid "PROGRAM STORE"
+msgstr "OHJELMA VARASTO"
+
+#: gui1.glade:711
+msgid "Change Language"
 msgstr ""
 
-#: gui1.glade:623
-msgid "Current Machine State"
-msgstr ""
-
-#: gui1.glade:648
-msgid "change language"
-msgstr "vaihtaa kieltä"
-
-#: gui1.glade:679
+#: gui1.glade:725
 msgid "Shutdown Machine"
 msgstr ""
 
-#: gui1.glade:717
-msgid "SYSTEM"
+#: gui1.glade:738
+msgid "Restart Control"
 msgstr ""
 
-#: gui1.glade:782
+#: gui1.glade:762
+msgid "SYSTEM"
+msgstr "OHJELMALAITE"
+
+#: gui1.glade:824
 msgid "1"
 msgstr ""
 
-#: gui1.glade:795
+#: gui1.glade:837
 msgid "2"
 msgstr ""
 
-#: gui1.glade:808
+#: gui1.glade:850
 msgid "3"
 msgstr ""
 
-#: gui1.glade:830
+#: gui1.glade:872
 msgid "4"
 msgstr ""
 
-#: gui1.glade:843
+#: gui1.glade:885
 msgid "5"
 msgstr ""
 
-#: gui1.glade:856
+#: gui1.glade:898
 msgid "6"
 msgstr ""
 
-#: gui1.glade:878
+#: gui1.glade:920
 msgid "7"
 msgstr ""
 
-#: gui1.glade:891
+#: gui1.glade:933
 msgid "8"
 msgstr ""
 
-#: gui1.glade:904
+#: gui1.glade:946
 msgid "9"
 msgstr ""
 
-#: gui1.glade:926
+#: gui1.glade:968
 msgid "."
 msgstr ""
 
-#: gui1.glade:939
+#: gui1.glade:981
 msgid "0"
 msgstr ""
 
-#: gui1.glade:952
+#: gui1.glade:994
 msgid "-"
 msgstr ""
 
-#: gui1.glade:1077
+#: gui1.glade:1119
 msgid "Cancel"
-msgstr ""
+msgstr "Peruuta"
 
-#: gui1.glade:1091
+#: gui1.glade:1133
 msgid "OK"
-msgstr ""
+msgstr "OK"
+
+#~ msgid "Position To Tube Y"
+#~ msgstr "Asema putkeen Y"
+#~ msgid "Position To Tube Feed"
+#~ msgstr "Asema putkeen Feed"
 

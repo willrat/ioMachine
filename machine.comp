@@ -137,6 +137,7 @@ enum states {   STATE_STANDBY = 0,
 bool state_entry = true;
 bool is_running_seen = false;
 
+// change state in the state machine
 static void change_state(struct state *inst, int new_state)
 {
     state_entry = true;
@@ -175,32 +176,6 @@ static void machine_off(struct state *inst){
 
 }
 
-//static void state_standby(struct state *inst, long period){
-static void state_standby(struct state *inst){
-    rtapi_print("in standby\n");
-
-    if (state_entry) {
-        state_entry = false;
-
-        hydraulicMotor = false;
-        //stateLocked = false;
-        enableJogButtons = false;
-    }
-
-    machine_off(inst);
-
-    if (requestManual){
-        change_state(inst, STATE_MANUAL);
-    }
-
-    //rtapi_print("in standby\n");
-
-    if (startButton) {
-        // go to ready state
-        change_state(inst, STATE_READY);
-    }
-}
-
 static void mode_auto(struct state *inst){
     if (!isModeAuto){
         modeAuto = 1;
@@ -220,6 +195,35 @@ static void mode_manual(struct state *inst){
         modeManual = 0;
     }
 }
+
+//static void state_standby(struct state *inst, long period){
+static void state_standby(struct state *inst){
+    //rtapi_print("in standby\n");
+
+    if (state_entry) {
+        state_entry = false;
+
+        hydraulicMotor = false;
+        //stateLocked = false;
+        enableJogButtons = false;
+    }
+
+    mode_manual(inst);
+    machine_off(inst);
+
+    if (requestManual){
+        change_state(inst, STATE_MANUAL);
+    }
+
+    //rtapi_print("in standby\n");
+
+    if (startButton && !eStopRelay) {
+        // go to ready state
+        change_state(inst, STATE_READY);
+    }
+}
+
+
 
 static void state_ready(struct state *inst){
     if (state_entry){
@@ -243,9 +247,11 @@ static void state_ready(struct state *inst){
     if (stopButton)
         change_state(inst, STATE_STANDBY);
 
-    if (requestManual){
+    if (requestManual)
         change_state(inst, STATE_MANUAL);
-    }
+
+    if (eStopRelay)
+        change_state(inst, STATE_STANDBY);
 
     readyTimerRemain -= gPeriod; //decrement timer by period
     
@@ -316,6 +322,7 @@ void state_vice_open(struct state *inst){
             clampTimerRemain = to_nanoseconds(inst, 1.25);
     }
 
+    // turn off the motion 'machine'
     machine_off(inst);
 
     if (footPedal){
@@ -327,9 +334,6 @@ void state_vice_open(struct state *inst){
 
     if (clampTimerRemain <= 0.0)
         exit = true;
-
-    // if (viceSafetyRelay)
-    //     exit = true;
 
     if (exit){
         change_state(inst, STATE_READY);
@@ -368,25 +372,24 @@ static void state_cycle(struct state *inst){
 
     cycleTimerRemain -= gPeriod;
 
-    // exit code
+    // cycle did not complete in time
     if (cycleTimerRemain <= 0.0){
         exit = true;
         error = true;
-        // TODO: note that the motion did not complete correctly
     }
 
+    // cycle aborted
     if (stopButton){
-        // change_state(inst, )
-        // enableMotion = 0;
-        // TODO: Stop motion pin
         exit = true;
     }
 
     // program is not running but has been seen running; exit
+    // i.e program has finished
     if (!isRunProgram && is_running_seen) {
         exit = true;
     }
 
+    // goto open vice
     if (exit)
     {
         //enableMotion = 0;
@@ -404,20 +407,27 @@ static void state_manual(struct state *inst){
         enableManual = 1;
     }
 
-    machine_on(inst);
-    mode_manual(inst);
+    // machine_on(inst);
+    // mode_manual(inst);
 
-    if (startButton){
+    if (startButton && !eStopRelay){
         hydraulicMotor = 1;
+        return;
     } else if (stopButton){
         hydraulicMotor = 0;
+        return;
+    } else if (eStopRelay) {
+        hydraulicMotor = 0;
+        return;
     }
 
-    // TODO: this can now control the machine..
     if (hydraulicMotor){        
         enableManual = 1;
+        // machine_on(inst);
+        // mode_manual(inst);
     } else {
         enableManual = 0;
+        // machine_off(inst);
     }
 
     if (hydraulicAxisJog){
@@ -429,8 +439,11 @@ static void state_manual(struct state *inst){
     if (!viceSafetyRelay){
         // ok to jog
         enableJogButtons = true;
+        machine_on(inst);
+        mode_manual(inst);
     } else {
         enableJogButtons = false;
+        machine_off(inst);
     }
 
     if (footPedal){
@@ -499,9 +512,6 @@ FUNCTION(_) {
         case STATE_CLOSEVICE:
             state_vice_close(inst);
             break;
-        // case STATE_STARTSPINDLE:
-        //     state_startspindle(inst);
-        //     break;
         case STATE_CYCLE:
             state_cycle(inst);
             break;
