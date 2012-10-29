@@ -40,6 +40,8 @@ pin in bit          viceOpenJog;
 pin in bit          viceCloseJog;
 pin in bit          hydraulicAxisJog;
 
+// if the current program needs a second step
+pin io u32          cycleStatus;
 
 // // outputs
 pin out bit         viceOpenValve;
@@ -70,20 +72,12 @@ pin in bit          isMachineOn;
 
 pin out bit         runProgram;
 pin in bit          isRunProgram;
+pin out bit 		isRunningSeen;			// for debugging
 
 pin in bit          isModeAuto;
 pin in bit          isModeManual;
 pin out bit         modeAuto;
 pin out bit         modeManual;
-
-// pins from our sponsor...
-// Input Pins
-// pin in bit          start "Run Timer";
-
-// Output Pins
-// pin out u32         seconds "Seconds";
-// pin out u32         minutes "Minutes";
-// pin out u32         hours "Hours";
 
 // pin and variables
 pin out u32         currentState;          // for display in hmi
@@ -111,46 +105,39 @@ function _;
 
 ;;
 
-// struct state {
-//     int number;
-// };
-
 #include "rtapi_math.h"
-
-// #include  "/usr/include/stdio.h"
-// #include  <stdio>
 
 enum states {   STATE_STANDBY = 0,
                 STATE_READY,
                 STATE_CLOSEVICE,
-                // STATE_STARTSPINDLE,
                 STATE_CYCLE,
                 STATE_OPENVICE,
                 STATE_MANUAL,
                 STATE_CYCLE_ABORT,
-                MAX_STATES }; //currentState;
-// states new_state;
+                MAX_STATES };
 
-//currentState = STATE_STANDBY;
+enum status { 	STATUS_START = 0,
+				STATUS_CYCLE_PROGRAM_READY,
+				STATUS_CYCLE_PROGRAM_DONE,
+				STATUS_STOPPOS_PROGRAM_READY,
+				STATUS_STOPPOS_PROGRAM_DONE,
+				MAX_STATUS };
 
-//if we have changed state                
+//if we have changed state
 bool state_entry = true;
-bool is_running_seen = false;
+
 
 // change state in the state machine
-static void change_state(struct state *inst, int new_state)
-{
+static void change_state(struct state *inst, int new_state){
     state_entry = true;
     currentState = new_state;
 }
 
 static float to_nanoseconds(struct state *inst, float seconds){
-    //return seconds * 0.000000001;
     return seconds * 1000000000.0;
 }
 
 static float to_seconds(struct state *inst, float nanoseconds){
-    //return nanoseconds * 1000000000.0;
     return nanoseconds * 0.000000001;
 }
 
@@ -196,7 +183,6 @@ static void mode_manual(struct state *inst){
     }
 }
 
-//static void state_standby(struct state *inst, long period){
 static void state_standby(struct state *inst){
     //rtapi_print("in standby\n");
 
@@ -237,7 +223,7 @@ static void state_ready(struct state *inst){
             readyTimerRemain = to_nanoseconds(inst, 300); // 5 minutes
     }
 
-    machine_on(inst);
+    //machine_on(inst);
     mode_auto(inst);
 
 
@@ -257,7 +243,22 @@ static void state_ready(struct state *inst){
     
     //if (footPedal)
     if (startEdge){
-        change_state(inst, STATE_CLOSEVICE);
+
+        // see if we need to avoid closing the vice
+        if (cycleStatus == STATUS_CYCLE_PROGRAM_READY){
+
+            change_state(inst, STATE_CLOSEVICE);
+            //cycleStatus++;
+
+        } else if (cycleStatus == STATUS_STOPPOS_PROGRAM_READY) {
+
+            change_state(inst, STATE_CYCLE);
+            //cycleStatus++;
+
+        } else {
+            change_state(inst, STATE_STANDBY);
+        }
+        //change_state(inst, STATE_CLOSEVICE);
         stateLocked = true;
     }
 }
@@ -346,8 +347,8 @@ static void run_program(struct state *inst){
         runProgram = 1;
     } else {
         runProgram = 0;
-        if (!is_running_seen)
-            is_running_seen = true;
+        if (!isRunningSeen)
+            isRunningSeen = true;
     }
 }
 
@@ -365,10 +366,15 @@ static void state_cycle(struct state *inst){
             cycleTimerRemain = to_nanoseconds(inst, 60.0);
 
         //enableMotion = 1;
-        is_running_seen = false;
+        isRunningSeen = false;
     }
 
-    run_program(inst);
+    //
+    machine_on(inst);
+    mode_auto(inst);
+
+    if (isMachineOn && isModeAuto)
+        run_program(inst);
 
     cycleTimerRemain -= gPeriod;
 
@@ -385,7 +391,7 @@ static void state_cycle(struct state *inst){
 
     // program is not running but has been seen running; exit
     // i.e program has finished
-    if (!isRunProgram && is_running_seen) {
+    if (!isRunProgram && isRunningSeen) {
         exit = true;
     }
 
@@ -394,7 +400,22 @@ static void state_cycle(struct state *inst){
     {
         //enableMotion = 0;
         runProgram = 0;
-        change_state(inst, STATE_OPENVICE);
+
+        if (cycleStatus == STATUS_CYCLE_PROGRAM_READY){
+
+            change_state(inst, STATE_OPENVICE);
+            cycleStatus = STATUS_CYCLE_PROGRAM_DONE;
+
+        } else if (cycleStatus == STATUS_STOPPOS_PROGRAM_READY) {
+
+            change_state(inst, STATE_READY);
+            cycleStatus = STATUS_STOPPOS_PROGRAM_DONE;
+
+        } else {
+            change_state(inst, STATE_STANDBY);
+        }
+
+        //change_state(inst, STATE_OPENVICE);
     }
 
 }
@@ -406,9 +427,6 @@ static void state_manual(struct state *inst){
         state_entry = false;
         enableManual = 1;
     }
-
-    // machine_on(inst);
-    // mode_manual(inst);
 
     if (startButton && !eStopRelay){
         hydraulicMotor = 1;
@@ -423,11 +441,8 @@ static void state_manual(struct state *inst){
 
     if (hydraulicMotor){        
         enableManual = 1;
-        // machine_on(inst);
-        // mode_manual(inst);
     } else {
         enableManual = 0;
-        // machine_off(inst);
     }
 
     if (hydraulicAxisJog){
@@ -482,16 +497,16 @@ static void update_timer_outs(struct state *inst){
 
 FUNCTION(_) {
 
-    // always scanned
-    if (    !mcb1 
-        ||  !mcb2 
-        ||  !mcb3 
-        ||  eStopRelay )
-    {
-        error = true;
-    }
-    else
-        error = false;
+    // // always scanned
+    // if (    !mcb1 
+    //     ||  !mcb2 
+    //     ||  !mcb3 
+    //     ||  eStopRelay )
+    // {
+    //     error = true;
+    // }
+    // else
+    //     error = false;
 
     update_timer_outs(inst);
 

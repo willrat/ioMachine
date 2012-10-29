@@ -2,6 +2,7 @@
 
 net 	currentState 				machine.currentState 			hmi.currentState
 net 	manualRequest 				machine.requestManual			hmi.requestManual
+net 	cycleStatus					machine.cycleStatus				hmi.cycleStatus
 
 # debug
 #show pin hmi.unclampTime
@@ -13,6 +14,8 @@ net 	viceCloseToggle				machine.viceCloseJog			hmi.viceCloseToggle
 
 net 	enableJogButtons			machine.enableJogButtons		hmi.enableJogButtons
 net 	hydraulicAxisJog			machine.hydraulicAxisJog		hmi.hydraulicAxisJog
+
+# status leds etc
 
 net 	mcb1						hmi.mcb1Led
 net 	mcb2						hmi.mcb2Led

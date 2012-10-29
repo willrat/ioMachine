@@ -22,6 +22,10 @@ class storable():
     self.currentIndex = 0
     self.language = ""
     
+  def remove(self, index):
+    pass
+    
+    
   def getPrograms(self):
     return self.programs
 

@@ -53,7 +53,7 @@ class touchKeyboard():
     for item in objects:
       if type(item) == gtk.Button:
         print item.get_label()
-        item.set_size_request(80, 80)
+        item.set_size_request(75, 75)
         
         # connect any character buttons        
         if (len((str)(item.get_label())) <= 1 ):

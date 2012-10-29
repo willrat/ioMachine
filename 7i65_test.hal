@@ -243,7 +243,7 @@ net stopButton 				hm2_5i20.0.gpio.044.in_not		machine.stopButton
 net startButton 			hm2_5i20.0.gpio.043.in_not		machine.startButton
 
 net viceRelay 				hm2_5i20.0.gpio.042.in_not     	machine.viceSafetyRelay
-net eStopRelay 				hm2_5i20.0.gpio.041.in_not
+net eStopRelay 				hm2_5i20.0.gpio.041.in_not		machine.eStopRelay
 net twoHandRelay			hm2_5i20.0.gpio.040.in_not
 net twoHandStart			hm2_5i20.0.gpio.040.in
 
@@ -277,15 +277,10 @@ net isModeManual			machine.isModeManual		halui.mode.is-manual
 net modeAuto				machine.modeAuto			halui.mode.auto
 net modeManual				machine.modeManual			halui.mode.manual
 
-# motion handler connections from machine module
-#loadusr -W /home/user/linuxcnc/configs/test_area/motionHandler.py
-
-# load the hmi
-#loadusr /home/user/linuxcnc/configs/test_area/gui1.py
-loadusr /home/user/installation/gui1.py
+#loadusr /home/user/installation/gui1.py
 # commands in hmi.hal will be called after setup of module
 
 # do this last to avoid watchdog
-net mesa-7i65.ldac    hm2_5i20.0.gpio.021.out
-net mesa-7i65.enable  hm2_5i20.0.gpio.022.out
-net mesa-7i65.reset   hm2_5i20.0.gpio.023.out
+net mesa-7i65.ldac    		hm2_5i20.0.gpio.021.out
+net mesa-7i65.enable  		hm2_5i20.0.gpio.022.out
+net mesa-7i65.reset   		hm2_5i20.0.gpio.023.out

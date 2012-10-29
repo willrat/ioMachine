@@ -41,6 +41,7 @@
             </child>
             <child>
               <object class="GtkLabel" id="statusLabel">
+                <property name="width_request">750</property>
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">STATUS: etc etc</property>
               </object>
@@ -49,7 +50,36 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkHButtonBox" id="hbuttonbox2">
+                <property name="visible">True</property>
+                <property name="layout_style">center</property>
+                <child>
+                  <object class="GtkLabel" id="label13">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">E-STOP</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="HAL_LED" id="eStopRelayMainStatusLed">
+                    <property name="visible">True</property>
+                    <property name="led_size">15</property>
+                    <property name="led_blink_rate">0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
             </child>
           </object>
           <packing>
@@ -76,18 +106,19 @@
                 <property name="n_rows">3</property>
                 <property name="n_columns">2</property>
                 <child>
-                  <object class="GtkHButtonBox" id="hbuttonbox2">
+                  <object class="GtkHButtonBox" id="autoButtons">
                     <property name="visible">True</property>
                     <property name="homogeneous">True</property>
                     <property name="layout_style">spread</property>
                     <child>
-                      <object class="HAL_RadioButton" id="hal_radiobutton1">
+                      <object class="GtkRadioButton" id="cycleToggle">
                         <property name="label" translatable="yes">CYCLE</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="active">True</property>
                         <property name="draw_indicator">False</property>
+                        <signal name="toggled" handler="on_cycleToggle_toggled"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -96,13 +127,14 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="HAL_RadioButton" id="hal_radiobutton3">
-                        <property name="label" translatable="yes">STOP POSITION</property>
+                      <object class="GtkRadioButton" id="tubeStopToggle">
+                        <property name="label" translatable="yes">TUBE STOP</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
+                        <property name="active">True</property>
                         <property name="draw_indicator">False</property>
-                        <property name="group">hal_radiobutton1</property>
+                        <property name="group">cycleToggle</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -358,6 +390,7 @@
                                 <child>
                                   <object class="GtkHScale" id="hscale1">
                                     <property name="width_request">200</property>
+                                    <property name="height_request">20</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="adjustment">xJogSpeed</property>
@@ -458,7 +491,7 @@
                         <property name="visible">True</property>
                         <property name="left_padding">12</property>
                         <child>
-                          <object class="GtkHButtonBox" id="hbuttonbox3">
+                          <object class="GtkHButtonBox" id="viceJogButtons">
                             <property name="visible">True</property>
                             <property name="layout_style">spread</property>
                             <child>
@@ -497,55 +530,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkFrame" id="frame5">
-                                <property name="visible">True</property>
-                                <property name="label_xalign">0</property>
-                                <child>
-                                  <object class="GtkAlignment" id="alignment5">
-                                    <property name="visible">True</property>
-                                    <property name="left_padding">12</property>
-                                    <child>
-                                      <object class="GtkHButtonBox" id="hbuttonbox17">
-                                        <property name="visible">True</property>
-                                        <child>
-                                          <object class="GtkLabel" id="label14">
-                                            <property name="visible">True</property>
-                                            <property name="label" translatable="yes">Vice Closed</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">False</property>
-                                            <property name="position">0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="HAL_LED" id="viceClosedLED">
-                                            <property name="visible">True</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">False</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                      </object>
-                                    </child>
-                                  </object>
-                                </child>
-                                <child type="label">
-                                  <object class="GtkLabel" id="label13">
-                                    <property name="visible">True</property>
-                                    <property name="label" translatable="yes">status</property>
-                                    <property name="use_markup">True</property>
-                                  </object>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">2</property>
-                                <property name="secondary">True</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                           </object>
                         </child>
@@ -637,7 +622,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="hscrollbar_policy">automatic</property>
-                    <property name="vscrollbar_policy">automatic</property>
+                    <property name="shadow_type">etched-in</property>
                     <child>
                       <object class="GtkTreeView" id="treeview1">
                         <property name="visible">True</property>
@@ -663,16 +648,17 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="padding">4</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHButtonBox" id="hbuttonbox4">
+                  <object class="GtkHButtonBox" id="programStoreButtons">
                     <property name="visible">True</property>
                     <property name="layout_style">spread</property>
                     <child>
                       <object class="GtkButton" id="newProgramButton">
-                        <property name="label" translatable="yes">New</property>
+                        <property name="label" translatable="yes">NEW</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -686,7 +672,7 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="loadProgramButton">
-                        <property name="label" translatable="yes">Open</property>
+                        <property name="label" translatable="yes">OPEN</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -699,11 +685,12 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button4">
+                      <object class="GtkButton" id="editProgram1">
+                        <property name="label" translatable="yes">EDIT</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="use_stock">True</property>
+                        <signal name="clicked" handler="on_editProgram_clicked"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -712,11 +699,12 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button1">
-                        <property name="label" translatable="yes">Delete</property>
+                      <object class="GtkButton" id="deleteProgramButton">
+                        <property name="label" translatable="yes">DELETE</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <signal name="clicked" handler="on_deleteProgramButton_clicked"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -1033,22 +1021,11 @@
                   <placeholder/>
                 </child>
                 <child>
-                  <object class="GtkHButtonBox" id="hbuttonbox12">
+                  <object class="GtkHButtonBox" id="machineControlButtons">
                     <property name="visible">True</property>
                     <property name="layout_style">spread</property>
                     <child>
-                      <object class="GtkButton" id="changeLanguageButton">
-                        <property name="label" translatable="yes">Change Language</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <signal name="clicked" handler="on_changeLanguageButton_clicked"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">0</property>
-                      </packing>
+                      <placeholder/>
                     </child>
                     <child>
                       <object class="GtkButton" id="shutdownButton">
@@ -1070,6 +1047,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <signal name="clicked" handler="on_restartButton_clicked"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -1158,7 +1136,7 @@
           </packing>
         </child>
         <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area1">
+          <object class="GtkHButtonBox" id="programDialogButtons">
             <property name="visible">True</property>
             <property name="homogeneous">True</property>
             <property name="layout_style">end</property>
@@ -1215,14 +1193,14 @@
   </object>
   <object class="GtkAdjustment" id="xJogSpeed">
     <property name="value">15</property>
-    <property name="lower">0.25</property>
+    <property name="lower">1</property>
     <property name="upper">25</property>
     <property name="step_increment">0.25</property>
     <property name="page_increment">1</property>
     <property name="page_size">1</property>
   </object>
   <object class="GtkAdjustment" id="yJogSpeed">
-    <property name="lower">0.25</property>
+    <property name="lower">1</property>
     <property name="upper">15</property>
     <property name="step_increment">0.25</property>
     <property name="page_increment">1</property>
