@@ -3,8 +3,6 @@ import locale
 
 APPLICATION_DOMAIN = 'machine'
 
-
-
 def initFinnish():
   locale.setlocale(locale.LC_ALL, "fi_FI.utf8")
   locale.bindtextdomain(APPLICATION_DOMAIN, './locale')
@@ -18,4 +16,6 @@ def initEnglish():
   english.install()
 
 
-initFinnish()
+#initFinnish()
+initEnglish()
+

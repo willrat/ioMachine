@@ -185,8 +185,10 @@
                     <child type="label">
                       <object class="GtkLabel" id="label6">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">tool path display</property>
-                        <property name="use_markup">True</property>
+                        <property name="label" translatable="yes">Tool Path Display</property>
+                        <attributes>
+                          <attribute name="weight" value="bold"/>
+                        </attributes>
                       </object>
                     </child>
                   </object>
@@ -237,8 +239,10 @@
                     <child type="label">
                       <object class="GtkLabel" id="currentProgramLabel">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;frame2&lt;/b&gt;</property>
-                        <property name="use_markup">True</property>
+                        <property name="label" translatable="yes">frame2</property>
+                        <attributes>
+                          <attribute name="weight" value="bold"/>
+                        </attributes>
                       </object>
                     </child>
                   </object>

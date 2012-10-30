@@ -147,25 +147,8 @@ class hmi(object):
 
     if button.get_active():
       self.loadMotionControlProgram(program=CYCLE_PROGRAM)
-#      h['cycleStatus'] = 1
     else:
       self.loadMotionControlProgram(program=TUBE_STOP_PROGRAM)
-#      h['cycleStatus'] = 3
-
-
-#    if h['cycleStatus'] == 2 and \
-#      self.currentProgram.isClearancePosition():
-#      self.loadMotionControlProgram(program=TUBE_STOP_PROGRAM)
-#      # set cycle Button 
-#      self.cycleToggle.set_active(False)
-#      # increment counter to inform machine.comp
-#      # that the new program has been loaded
-#      h['cycleStatus'] = 3
-#
-#    elif h['cycleStatus'] == 4:
-#      self.loadMotionControlProgram(program=CYCLE_PROGRAM)
-#      h['cycleStatus'] = 1;
-#      self.cycleToggle.set_active(True)
 
   #
   #  manual mode
@@ -188,26 +171,9 @@ class hmi(object):
 
   def on_viceOpenToggle_toggled(self, widget, data=None):
     print "on_viceOpenToggle_toggled"
-#    if widget.get_active:
-#      print "widget is active"
-#    else:
-#      print "widget is not active"
-#
-#
-#    if self.viceCloseToggle:
-#      if self.viceOpenToggle.get_active():
-#        self.viceCloseToggle.set_active(False)
-#    else:
-#      print "no viceCloseToggle"
-
 
   def on_viceCloseToggle_toggled(self, widget, data=None):
     print "on_viceCloseToggle_toggled"
-#    if self.viceOpenToggle:
-#      if self.viceCloseToggle.get_active():
-#        self.viceOpenToggle.set_active(False)
-#    else:
-#      print "no viceOpenToggle"
 
   def on_xJogSpeed_value_changed(self, adjustment):
     pass
@@ -280,25 +246,6 @@ class hmi(object):
   #  controls for notebook, should lock out screen in certain modes...
   #
 
-
-#  def on_notebook1_select_page(self, notebook, page, page_num, data=None):
-#    print "SELECT PAGE"
-
-#  def pollConnections(self):
-#
-#
-#    if self.currentStateString == "MANUAL":
-#      #print "current state is manual; set sensitivity appropriately"
-#      pass
-#    elif self.currentStateString in cycleStates:
-#      #print "current state is inCycle"
-#      pass
-#    else:
-#      pass
-#      #print "either in standby or in ready"
-#
-#    return True
-
   def setNonAutoPagesInactive(self):
     notebook = self.builder.get_object("notebook1")
 
@@ -333,7 +280,7 @@ class hmi(object):
     # in auto mode page
     if currentPage == 0:
       #check for 'in cycle', disable notebook pages if so
-      if self.currentStateString in cycleStates:
+      if self.isInCycle():
         self.setNonAutoPagesInactive()
       else:
         self.setPagesActive()
@@ -365,6 +312,15 @@ class hmi(object):
     self.editCurrent()
 
 
+  def isInCycle(self):
+    # update current state
+    self.currentStateString = states[h['currentState']]
+
+    if self.currentStateString in cycleStates:
+      return True
+
+    return False
+
   # update the dynamic elements on the screens
   def cyclicUpdate(self):
     # udpate labels
@@ -389,13 +345,6 @@ class hmi(object):
       if self.positionLabel:
         self.positionLabel.set_text(positionText)
 
-    # update current state
-    self.currentStateString = states[h['currentState']]
-    label = self.builder.get_object("stateLabel")
-    if states[h['currentState']] and label:
-      label.set_text(self.stateMachine.currentState)
-    elif label:
-      label.set_text("cannot get machine state")
 
     # set jog buttons off if the 
     # TODO: Read if jog OK
@@ -417,11 +366,17 @@ class hmi(object):
 
     statusLabel.set_text(statusText)
 
-    # disable controls when the program runs     
-    if self.currentStateString in cycleStates:
-      self.builder.get_object("editProgram").set_sensitive(False)
-    else:
-      self.builder.get_object("editProgram").set_sensitive(True)
+    #sensitive
+    # disable controls when the program runs   
+#    if self.isInCycle():
+#      self.builder.get_object("editProgram").set_sensitive(False)
+#    else:
+#      self.builder.get_object("editProgram").set_sensitive(True)
+
+    autoButtons = self.builder.get_object("autoButtons")
+    for item in autoButtons:
+      if type(item) == gtk.Button or type(item) == gladevcp.HAL_Button:
+        item.set_sensitive(not self.isInCycle())
 
     # from machine.comp
     #enum cycleStatus {  STATUS_START = 0,
@@ -541,19 +496,6 @@ class hmi(object):
           print "new index is %s" % counter
           break
 
-#    if self.programs[removeIndex] == self.currentProgram:
-#      print "remove current program"
-#      removed = self.programs.pop(removeIndex)  
-#      self.setCurrent(0)
-#      self.loadCurrent()
-#    else:
-#      removed = self.programs.pop(removeIndex)
-#      for (counter, item) in enumerate(self.programs):
-#        if item == self.currentProgram:
-#          self.setCurrent(counter)
-#          print "new index is %s" % counter
-#          break
-
     self.buildProgramList()
 
   #
@@ -590,11 +532,6 @@ class hmi(object):
     self.keyb.reset()
     # store the row we are editing
     self.editingPath = int(path)
-#    try:
-#      index = int(path)
-#    except:
-#      index = 0
-#      print "COULD NOT CONVERT PATH TO INDEX"
 
     print "Editing started: path %s" % path
 
@@ -627,24 +564,6 @@ class hmi(object):
 
   def on_changeLanguageButton_clicked(self, button):
     pass
-    #on_changeLanguageButton_clicked
-    # DOES NOT WORK.... Changing language on the fly is not very good
-    # at the moment on this platform
-
-#    print "change language button clicked"
-#    lang1.install()
-#    
-#    locale.setlocale(locale.LC_ALL, "en_GB.utf8")
-#    locale.bindtextdomain(APPLICATION_DOMAIN, './locale')
-
-#    self.window1.destroy()
-#    self.programDialog.destroy()
-#    self.keyb.getWindow().destroy()
-#    
-#    self.initAll()
-#    self.fillLists()
-
-
 
   #
   #  methods for the on screen keyboard
@@ -894,8 +813,6 @@ if __name__ == "__main__":
 
   try:
     app = hmi()
-
-
     gtk.main()
   except KeyboardInterrupt:
     raise SystemExit

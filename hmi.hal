@@ -26,6 +26,8 @@ net 	startButton 				hmi.startButtonLed
 
 net 	viceRelay 					hmi.viceRelayLed
 net 	eStopRelay 					hmi.eStopRelayLed
+net 	eStopRelay 					hmi.eStopRelayMainStatusLed
+
 net 	twoHandRelay				hmi.twoHandRelayLed
 
 net 	viceSwitchDiagnostic		hmi.viceSwitchDiagnosticLed

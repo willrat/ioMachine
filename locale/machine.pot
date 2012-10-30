@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-10-29 09:12+0000\n"
+"POT-Creation-Date: 2012-10-29 10:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,63 +16,63 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gui1.py:373
+#: gui1.py:329
 msgid "Current Program:"
 msgstr ""
 
-#: gui1.py:412
+#: gui1.py:361
 msgid "Current Status: "
 msgstr ""
 
-#: gui1.py:416
+#: gui1.py:365
 msgid "ERROR could not get status"
 msgstr ""
 
-#: gui1.py:843
+#: gui1.py:762
 msgid "Standby"
 msgstr ""
 
-#: gui1.py:844
+#: gui1.py:763
 msgid "Ready"
 msgstr ""
 
-#: gui1.py:845 gui1.glade:516
+#: gui1.py:764 gui1.glade:520
 msgid "Close Vice"
 msgstr ""
 
-#: gui1.py:847
+#: gui1.py:766
 msgid "Cycle"
 msgstr ""
 
-#: gui1.py:848 gui1.glade:499
+#: gui1.py:767 gui1.glade:503
 msgid "Open Vice"
 msgstr ""
 
-#: gui1.py:849 gui1.py:857
+#: gui1.py:768 gui1.py:776
 msgid "Manual"
 msgstr ""
 
-#: gui1.py:850 gui1.py:858
+#: gui1.py:769 gui1.py:777
 msgid "Cycle Aborted"
 msgstr ""
 
-#: gui1.py:852
+#: gui1.py:771
 msgid "Standby - Press start"
 msgstr ""
 
-#: gui1.py:853
+#: gui1.py:772
 msgid "Ready - Hold control for cycle"
 msgstr ""
 
-#: gui1.py:854
+#: gui1.py:773
 msgid "Close Vice - Hold control to close vice"
 msgstr ""
 
-#: gui1.py:855
+#: gui1.py:774
 msgid "Cycle - Forming tube"
 msgstr ""
 
-#: gui1.py:856
+#: gui1.py:775
 msgid "Open Vice - Hold control to open vice"
 msgstr ""
 
@@ -136,146 +136,146 @@ msgstr ""
 msgid "TUBE STOP"
 msgstr ""
 
-#: gui1.glade:147 gui1.glade:689
+#: gui1.glade:147 gui1.glade:693
 msgid "EDIT"
 msgstr ""
 
 #: gui1.glade:188
-msgid "tool path display"
+msgid "Tool Path Display"
 msgstr ""
 
-#: gui1.glade:240
-msgid "<b>frame2</b>"
+#: gui1.glade:242
+msgid "frame2"
 msgstr ""
 
-#: gui1.glade:264
+#: gui1.glade:268
 msgid "AUTO"
 msgstr ""
 
-#: gui1.glade:312
+#: gui1.glade:316
 msgid "X + (Head Back)"
 msgstr ""
 
-#: gui1.glade:327
+#: gui1.glade:331
 msgid "X - (Head Forward)"
 msgstr ""
 
-#: gui1.glade:342
+#: gui1.glade:346
 msgid "Y + (Tool out)"
 msgstr ""
 
-#: gui1.glade:357
+#: gui1.glade:361
 msgid "Y - (Tool in)"
 msgstr ""
 
-#: gui1.glade:382
+#: gui1.glade:386
 msgid "X Jog Speed"
 msgstr ""
 
-#: gui1.glade:408
+#: gui1.glade:412
 msgid "Y Jog Speed"
 msgstr ""
 
-#: gui1.glade:442
+#: gui1.glade:446
 msgid "<b>Position Jog</b>"
 msgstr ""
 
-#: gui1.glade:465
+#: gui1.glade:469
 msgid "label"
 msgstr ""
 
-#: gui1.glade:473
+#: gui1.glade:477
 msgid "<b>Position</b>"
 msgstr ""
 
-#: gui1.glade:542
+#: gui1.glade:546
 msgid "<b>Vice Control</b>"
 msgstr ""
 
-#: gui1.glade:595
+#: gui1.glade:599
 msgid "MANUAL"
 msgstr ""
 
-#: gui1.glade:608
+#: gui1.glade:612
 msgid "Current Program Name\n"
 msgstr ""
 
-#: gui1.glade:661
+#: gui1.glade:665
 msgid "NEW"
 msgstr ""
 
-#: gui1.glade:675
+#: gui1.glade:679
 msgid "OPEN"
 msgstr ""
 
-#: gui1.glade:703
+#: gui1.glade:707
 msgid "DELETE"
 msgstr ""
 
-#: gui1.glade:730
+#: gui1.glade:734
 msgid "PROGRAM STORE"
 msgstr ""
 
-#: gui1.glade:757
+#: gui1.glade:761
 msgid "mcb1 (Q2) Spindle Motor"
 msgstr ""
 
-#: gui1.glade:764
+#: gui1.glade:768
 msgid "mcb2 (Q2) X Axis Motor"
 msgstr ""
 
-#: gui1.glade:794
+#: gui1.glade:798
 msgid "mcb3 (Q3) Hydraulic Motor"
 msgstr ""
 
-#: gui1.glade:815
+#: gui1.glade:819
 msgid "Start Button"
 msgstr ""
 
-#: gui1.glade:825
+#: gui1.glade:829
 msgid "Stop Button"
 msgstr ""
 
-#: gui1.glade:857
+#: gui1.glade:861
 msgid "E-Stop Relay"
 msgstr ""
 
-#: gui1.glade:876
+#: gui1.glade:880
 msgid "Vice Relay"
 msgstr ""
 
-#: gui1.glade:899
+#: gui1.glade:903
 msgid "2 Hand Start Relay"
 msgstr ""
 
-#: gui1.glade:922
+#: gui1.glade:926
 msgid "vice switch diagnostic"
 msgstr ""
 
-#: gui1.glade:934
+#: gui1.glade:938
 msgid "guard switch diagnostic"
 msgstr ""
 
-#: gui1.glade:1008
+#: gui1.glade:1012
 msgid "<b>System  Status</b>"
 msgstr ""
 
-#: gui1.glade:1032
+#: gui1.glade:1036
 msgid "Shutdown Machine"
 msgstr ""
 
-#: gui1.glade:1046
+#: gui1.glade:1050
 msgid "Restart Control"
 msgstr ""
 
-#: gui1.glade:1071
+#: gui1.glade:1075
 msgid "SYSTEM"
 msgstr ""
 
-#: gui1.glade:1145
+#: gui1.glade:1149
 msgid "Cancel"
 msgstr ""
 
-#: gui1.glade:1159
+#: gui1.glade:1163
 msgid "OK"
 msgstr ""
