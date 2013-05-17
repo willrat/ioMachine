@@ -1,0 +1,17 @@
+<master idx="0" appTimePeriod="1000000" refClockSyncCycles="10">
+  
+  <slave idx="0" type="EK1100"/>
+  
+  <slave idx="1" type="EL3062"/>
+  <slave idx="2" type="EL4032"/>
+  
+  <slave idx="3" type="EL1018"/>
+  <slave idx="4" type="EL1018"/>
+  
+  <slave idx="5" type="EL2008"/>
+   
+  <slave idx="6" type="EL2024"/>
+  
+  
+  
+</master>

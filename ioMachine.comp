@@ -1,0 +1,662 @@
+component ioMachine "IO machine test";
+
+description 
+"""
+Machine controller
+
+""";
+ 
+author "";
+
+license "GPL";
+
+option singleton yes;
+
+// // inputs
+
+// EL1018 - slave
+pin in bit 			liftRamUp;
+pin in bit 			liftRamDown;
+pin in bit 			spireEngageIn;
+pin in bit 			spireEngageOut;
+pin in bit 			liftFrameLatchEngaged;
+pin in bit 			liftFrameLatchDisengaged;
+pin in bit 			liftFrameMated;
+pin in bit 			incomingAirOK;
+
+// EL1018 - slave
+pin in bit          startButton;
+pin in bit          stopButton;
+pin in bit          cycleStartButton;
+pin in bit          lubricantLow;
+pin in bit          pressureFilterBlocked;
+pin in bit          eStop;
+pin in bit          lightCurtainInput;
+pin in bit          inverterFault;
+
+// // outputs
+
+// EL2008 - slave
+pin out bit			lubricationPump;
+pin out bit			inverterEnable;
+pin out bit			inverterSpeedBit1;
+pin out bit			inverterSpeedBit2;
+pin out bit			hydraulicLoad;
+
+// EL2024 - slave
+pin out bit 		partLiftRam;
+pin out bit 		spireEngage;
+pin out bit 		latchLiftFrame;
+pin out bit 		spireLubeAirAssist;
+
+
+// some io for the pid loops
+pin out float 		oAxisCommand;
+pin in float		oAxisPosition;
+pin out bit			oAxisEnable;
+
+pin out float 		iAxisCommand;
+pin in float		iAxisPosition;
+pin out bit			iAxisEnable;
+
+pin in bit          startEdge;
+pin in bit          requestManual;
+
+pin in float        cycleTimeOut;
+pin in float        readyTimeOut;
+
+// manual controls
+
+pin out float		iAxisManualCommand;
+pin out float		oAxisManualCommand;
+
+pin in bit			manualTogglePartUp;
+pin in bit			manualToggleLiftCatch;
+pin in bit			manualToggleSpireEngage;
+
+pin in bit			hydraulicsOff;
+pin in bit			hydraulicSpeed1;
+pin in bit			hydraulicSpeed2;
+pin in bit			hydraulicSpeed3;
+pin in bit			manualHydraulicLoad;
+
+pin in float		iJogSpeed;
+pin in float		oJogSpeed;
+pin in bit			iJogPlus;
+pin in bit			iJogMinus;
+pin in bit 			oJogPlus;
+pin in bit			oJogMinus;
+
+
+// // outputs
+pin out bit         enableJogButtons;
+pin out bit         enableManual;
+pin out float       lastCycle;
+
+// pin and variables
+pin out u32         currentState;          // for display in hmi
+pin out float       clampTimerRemain;
+pin out float       clampTimerRemainSeconds;
+
+//pin out float       spindleTimerRemain;
+
+pin out float       cycleTimerRemain;
+pin out float       readyTimerRemain;
+pin out float       readyTimerRemainSeconds;
+
+// parameters
+
+
+pin out signed		lubricationCounter;
+param rw unsigned	lubricateCycleCounter;
+
+/*
+ * possibility of having these in a sep. module
+ * but then more hal wiring mucking about
+ * so they are in here for now....
+ */
+
+//position for tool release
+param rw float		oAxisToolReleasePosition;
+// position for part lift clearance;
+param rw float 		oAxisPartLiftPosition;
+param rw float		oAxisLubricationPosotion;
+
+param rw unsigned	operationtype-#[10];
+param rw float		position-#[10];
+
+
+
+
+// Global Variables
+variable double totalnsec;
+variable int old_start;
+
+//variable double clampTimerRemain;
+//variable double spindleTimerRemain;
+
+variable double gPeriod;
+
+function _;
+
+;;
+
+#include "rtapi_math.h"
+
+enum states {   STATE_STANDBY = 0,
+				STATE_PREPAREREADY,
+				STATE_NOTOOL,
+                STATE_READY,
+                STATE_PREPARETOOLRELEASE,
+                STATE_TOOLRELEASED,
+                STATE_LOWERPART,
+                STATE_MOTION,
+                STATE_FINALISE,
+                STATE_RAISEPART,
+                STATE_MANUAL,
+                STATE_CYCLE_ABORT,
+                STATE_LUBRICANT_LOW,
+                STATE_NO_AIR,
+                STATE_FILTER_BLOCKED,
+                STATE_INVERTER_FAULT,
+                STATE_ESTOP,
+                MAX_STATES };
+
+
+
+//if we have changed state
+bool state_entry = true;
+
+// these are substate variables used in different states.
+int toolChangeCounter = -1;
+int prepareReadyCounter = -1;
+
+
+// change state in the state machine
+static void change_state(struct __comp_state *__comp_inst, int new_state){
+    state_entry = true;
+    currentState = new_state;
+}
+
+// utility funcs...
+static float to_nanoseconds(struct __comp_state *__comp_inst, float seconds){
+    return seconds * 1000000000.0;
+}
+
+static float to_seconds(struct __comp_state *__comp_inst, float nanoseconds){
+    return nanoseconds * 0.000000001;
+}
+
+static void state_estop(struct __comp_state *__comp_inst){
+	if (state_entry) {
+		state_entry = false;
+	}
+	if (!eStop)
+		change_state(__comp_inst, STATE_STANDBY);
+}
+
+static void state_standby(struct __comp_state *__comp_inst){
+    //rtapi_print("in standby\n");
+
+    if (state_entry) {
+        state_entry = false;
+
+
+        // this will always be true except for tool change
+        // setting these to true now... but they should already on here
+        // TODO: move these to prepare_ready
+        spireEngage = true;
+        latchLiftFrame = true;
+
+
+
+        // TODO: these can be wrapped in function
+        inverterEnable = false;
+        inverterSpeedBit1 = false;
+        inverterSpeedBit2 = false;
+        hydraulicLoad = false;
+    }
+
+
+    if (requestManual)
+    	change_state(__comp_inst, STATE_MANUAL);
+
+    if (startButton) {
+    	change_state(__comp_inst, STATE_READY);
+    }
+}
+
+
+static void state_prepareready(struct __comp_state *__comp_inst){
+    if (state_entry){
+        state_entry = false;
+        prepareReadyCounter = 0;
+    }
+
+    if (!liftFrameMated){
+    	change_state(__comp_inst, STATE_NOTOOL);
+    }
+
+    switch (prepareReadyCounter){
+    case 0:
+    	// wait for light curtain to become active
+    	if (lightCurtainInput)
+    		prepareReadyCounter++;
+    	break;
+    case 1:
+    	// move the head up (so the tool lift can move into place)
+    	//oAxisPosition = 10.0f;
+    	oAxisCommand = 10.0;
+
+    	if (true) {
+    		prepareReadyCounter++;
+    		// start the ram lifting
+    		partLiftRam = true;
+    	}
+    case 2:
+    	// filter the listRamUp for 100ms
+    	if (liftRamUp){
+    		prepareReadyCounter++;
+    		cycleTimerRemain = to_nanoseconds(__comp_inst, 0.1f);
+    	}
+    case 3:
+    	if (!liftRamUp)
+    		prepareReadyCounter--;
+
+    	cycleTimerRemain -= gPeriod; // decrement timer
+
+    	if (cycleTimerRemain <= 0.0)
+    		change_state(__comp_inst, STATE_READY);
+    }
+
+}
+
+
+
+static void state_ready(struct __comp_state *__comp_inst){
+    if (state_entry){
+        state_entry = false;
+
+        inverterEnable = true;
+        inverterSpeedBit1 = false;
+        inverterSpeedBit2 = false;
+        hydraulicLoad = false;
+
+
+        readyTimerRemain = to_nanoseconds(__comp_inst, readyTimeOut);
+
+        // set a default if 0
+        if (readyTimerRemain <= 0.0)
+            readyTimerRemain = to_nanoseconds(__comp_inst, 300); // 5 minutes
+    }
+
+    if (readyTimerRemain <= 0.0)
+        change_state(__comp_inst, STATE_STANDBY);
+
+    if (stopButton)
+        change_state(__comp_inst, STATE_STANDBY);
+
+    if (requestManual)
+        change_state(__comp_inst, STATE_MANUAL);
+
+    if (eStop)
+        change_state(__comp_inst, STATE_STANDBY);
+
+    readyTimerRemain -= gPeriod; //decrement timer by period
+    
+    //if (footPedal)
+    if (startEdge){
+
+    	change_state(__comp_inst, STATE_LOWERPART);
+
+        //change_state(__comp_inst, STATE_CLOSEVICE);
+        //stateLocked = true;
+    }
+}
+
+static void state_preparetoolrelease(struct __comp_state *__comp_inst){
+	if (state_entry){
+		state_entry = false;
+		toolChangeCounter = 0;
+	}
+
+	switch (toolChangeCounter){
+	case 0:
+		// TODO: Here we need to do motion so the axes
+		// are in the correct position prior to tool
+		// change
+		toolChangeCounter++;
+		break;
+
+	case 1:
+		// move the spire latch out....
+		spireEngage = false;
+		if (spireEngageOut)
+			toolChangeCounter++;
+		break;
+
+	case 2:
+		latchLiftFrame = false;
+		if (liftFrameLatchDisengaged)
+			toolChangeCounter++;
+		break;
+	case 3:
+		change_state(__comp_inst, STATE_TOOLRELEASED);
+		break;
+	}
+}
+
+static void state_toolreleased(struct __comp_state *__comp_inst){
+	if (state_entry){
+		state_entry = false;
+	}
+	if (!liftFrameMated)
+	{
+		change_state(__comp_inst, STATE_NOTOOL);
+	}
+}
+
+static void state_lowerpart(struct __comp_state *__comp_inst){
+
+    if (state_entry){
+        state_entry = false;
+        partLiftRam = false;
+
+    }
+
+    // TODO: Time out
+
+    if (liftRamDown){
+        change_state(__comp_inst, STATE_MOTION);
+    }
+}
+
+static void state_raisepart(struct __comp_state *__comp_inst){
+
+    if (state_entry){
+        state_entry = false;
+        partLiftRam = true;
+
+    }
+
+    // TODO: Time out
+
+    if (liftRamUp){
+        change_state(__comp_inst, STATE_READY);
+    }
+}
+
+static void state_motion(struct __comp_state *__comp_inst){
+
+    bool exit = false;
+
+    if (state_entry){
+        state_entry = false;
+        // with a 25 second time-out
+        cycleTimerRemain = to_nanoseconds(__comp_inst, cycleTimeOut);
+
+        // set a default if 0
+        if (cycleTimerRemain <= 0.0)
+            cycleTimerRemain = to_nanoseconds(__comp_inst, 60.0);
+
+        //enableMotion = 1;
+        //isRunningSeen = false;
+    }
+
+    // decrement timer
+    cycleTimerRemain -= gPeriod;
+
+    // cycle did not complete in time
+    if (cycleTimerRemain <= 0.0){
+        //error = true; // debugging
+        change_state(__comp_inst, STATE_STANDBY);
+    }
+
+    // cycle aborted
+    if (stopButton){
+    	//change_state(__comp_inst, STATE_STANDBY);
+    	change_state(__comp_inst, STATE_FINALISE);
+    }
+
+    // goto open vice
+    if (exit){
+
+    	change_state(__comp_inst, STATE_FINALISE);
+    }
+
+}
+
+static void state_finalise(struct __comp_state *__comp_inst){
+	if (state_entry){
+		state_entry = false;
+	}
+
+	change_state(__comp_inst, STATE_RAISEPART);
+}
+
+static void state_calibrate(struct __comp_state *__comp_inst){
+	if (state_entry){
+		state_entry = false;
+		hydraulicLoad = true;
+	}
+
+	//move both axis to the minimum position and record
+
+
+
+}
+
+static void state_manual(struct __comp_state *__comp_inst){
+    bool exit = false;
+
+    if (state_entry){
+        state_entry = false;
+        enableManual = 1;
+        inverterEnable = false;
+    }
+
+    if (startButton && !eStop){
+        //hydraulicMotor = 1;
+        return;
+    } else if (stopButton){
+        //hydraulicMotor = 0;
+        return;
+    } else if (eStop) {
+        //hydraulicMotor = 0;
+        return;
+    }
+
+    /*
+     * Jogging using the following pins
+    pin in float		iJogSpeed;
+    pin in float		oJogSpeed;
+    pin in bit			iJogPlus;
+    pin in bit			iJogMinus;
+    pin in bit 			oJogPlus;
+    pin in bit			oJogMinus;
+    */
+
+    if (iJogPlus){
+    	iAxisEnable = true;
+    	iAxisManualCommand = iJogSpeed;
+    } else if (iJogMinus) {
+    	iAxisEnable = true;
+    	iAxisManualCommand = -iJogSpeed;
+    } else {
+    	iAxisEnable = false;
+    }
+
+    if (oJogPlus){
+    	oAxisEnable = true;
+    	oAxisManualCommand = oJogSpeed;
+    } else if (oJogMinus) {
+    	oAxisEnable = true;
+    	oAxisManualCommand = -oJogSpeed;
+    } else {
+    	oAxisEnable = false;
+    }
+
+
+
+
+
+
+
+    /*
+    pin in bit			manualTogglePartUp;
+    pin in bit			manualToggleLiftCatch;
+    pin in bit			manualToggleSpireEngage;
+    */
+
+
+
+    if (manualTogglePartUp){
+    	// TODO: if outer-ring is not at top
+    	partLiftRam = true;
+    } else {
+    	partLiftRam = false;
+    }
+
+    if (manualToggleSpireEngage)
+    	spireEngage = true;
+    else
+    	spireEngage = false;
+
+    if (manualToggleLiftCatch){
+    	// TODO: check part face mated liftFrameMated
+    	latchLiftFrame = true;
+    } else {
+    	latchLiftFrame = false;
+    }
+
+    /*
+    pin in bit			hydraulicsOff;
+    pin in bit			hydraulicSpeed1;
+    pin in bit			hydraulicSpeed2;
+    pin in bit			hydraulicSpeed3;
+    */
+    if (manualHydraulicLoad && !hydraulicsOff) {
+    	hydraulicLoad = true;
+    } else {
+    	hydraulicLoad = false;
+    }
+
+
+    if (hydraulicsOff) {
+    	inverterEnable = false;
+    	hydraulicLoad = false;
+    	inverterSpeedBit1 = false;
+    	inverterSpeedBit2 = false;
+    }
+
+    if (hydraulicSpeed1) {
+    	inverterEnable = true;
+    	inverterSpeedBit1 = true;
+    	inverterSpeedBit2 = false;
+    }
+    if (hydraulicSpeed2) {
+    	inverterEnable = true;
+    	inverterSpeedBit1 = false;
+    	inverterSpeedBit2 = true;
+    }
+    if (hydraulicSpeed3) {
+    	inverterEnable = true;
+    	inverterSpeedBit1 = true;
+    	inverterSpeedBit2 = true;
+    }
+
+    if (!requestManual){
+        exit = true;
+    }
+
+    if (exit){
+    	if (true)
+            change_state(__comp_inst, STATE_READY);
+        else
+            change_state(__comp_inst, STATE_STANDBY);
+    }
+}
+
+//update timer in seconds outputs
+static void update_timer_outs(struct __comp_state *__comp_inst){
+    clampTimerRemainSeconds = to_seconds(__comp_inst, clampTimerRemain);
+    readyTimerRemainSeconds = to_seconds(__comp_inst, readyTimerRemain);
+}
+
+FUNCTION(_) {
+
+	//__comp_state *inst = __comp_inst;
+    update_timer_outs(__comp_inst);
+
+    // output last period to pin
+    lastCycle = period - gPeriod;
+    // store the current nanosecond period offset
+    gPeriod = period;
+
+    /*
+     * always processed system checks
+     */
+
+    //if (lubricantLow && !ignoreLubricant){
+
+//    if (lubricantLow){
+//    	//chnage state to
+//    	change_state(__comp_inst, STATE_LUBRICANT_LOW);
+//    }
+//
+//    if (!incomingAirOK){
+//    	change_state(__comp_inst, STATE_NO_AIR);
+//    }
+//
+//    if (pressureFilterBlocked){
+//    	change_state(__comp_inst, STATE_FILTER_BLOCKED);
+//    }
+//
+//    if (inverterFault){
+//    	change_state(__comp_inst, STATE_INVERTER_FAULT);
+//    }
+//
+//    if (eStop)
+//    	change_state(__comp_inst, STATE_ESTOP);
+
+
+    
+    // switch on state
+    switch (currentState)
+    {
+    case STATE_STANDBY:
+    	state_standby(__comp_inst);
+    	break;
+    case STATE_PREPAREREADY:
+    	state_prepareready(__comp_inst);
+    	break;
+    case STATE_READY:
+    	state_ready(__comp_inst);
+    	break;
+    case STATE_PREPARETOOLRELEASE:
+    	state_preparetoolrelease(__comp_inst);
+    	break;
+    case STATE_LOWERPART:
+    	state_lowerpart(__comp_inst);
+    	break;
+    case STATE_MOTION:
+    	state_motion(__comp_inst);
+    	break;
+    case STATE_FINALISE:
+    	state_finalise(__comp_inst);
+    	break;
+    case STATE_RAISEPART:
+    	state_raisepart(__comp_inst);
+    	break;
+    case STATE_MANUAL:
+    	state_manual(__comp_inst);
+    	break;
+    case STATE_ESTOP:
+    	state_estop(__comp_inst);
+    	break;
+    case MAX_STATES:
+    	state_ready(__comp_inst);
+    	break;
+    }
+}
+

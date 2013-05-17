@@ -1,0 +1,111 @@
+# load ethercat master
+
+loadusr -W emcec_conf IOMachineMasterConfig.xml
+loadrt emcec
+
+loadrt threads name1=master period1=1000000
+
+addf emcec.read-all master
+addf emcec.write-all master
+
+# TODO: PID
+
+loadrt ioMachine
+setp ioMachine.requestManual 1
+addf ioMachine master
+
+loadrt scale count=2
+addf scale.0 master
+addf scale.1 master
+
+loadrt pid scale num_chan=2
+addf pid.0.do-pid-calcs master
+addf pid.1.do-pid-calcs master
+
+net 
+
+# TODO: scale input values to mm
+# tan 6 degrees  
+setp scale.0.gain	0.10510423526567646251
+
+# tan 7 degrees
+setp scale.1.gain	0.12278456090290459113
+
+#net iAxisPosition 		emcec.0.1.ain-0-val		ioMachine.iAxisPosition
+#net oAxisPosition 		emcec.0.1.ain-1-val		ioMachine.oAxisPosition
+
+
+
+loadrt mux2 count=2
+
+net iAxisManualCommand	ioMachine.iAxisCommand	mux2.0.in0
+net iAxisAutoCommand	pid.0.output			mux2.0.in1
+
+net oAxisManualCommand	ioMachine.oAxisCommand	mux2.1.in0
+net oAxisAutoCommand	pid.1.output			mux2.1.in1
+
+
+#
+# machine IO as per wiring diagram
+#
+
+#EL3062
+net iAxisPosition 		emcec.0.1.ain-0-val		scale.0.in
+net oAxisPosition 		emcec.0.1.ain-1-val		scale.1.in
+
+#EL4032
+#net iAxisCommand 		emcec.0.2.aout-0-value  ioMachine.iAxisCommand
+net iAxisOutputCommand	emcec.0.2.aout-0-value  mux2.0.out
+net iAxisEnable	  		emcec.0.2.aout-0-enable ioMachine.iAxisEnable
+net iAxisEnable			pid.0.enable
+
+
+#net oAxisCommand 		emcec.0.2.aout-1-value  ioMachine.oAxisCommand
+net oAxisOutputCommand	emcec.0.2.aout-1-value  mux2.1.out
+net oAxisEnable 		emcec.0.2.aout-1-enable ioMachine.oAxisEnable
+net oAxisEnable 		pid.1.enable
+
+#EL1018
+
+net liftRamUp 			emcec.0.3.din-0			ioMachine.liftRamUp
+net liftRamDown 		emcec.0.3.din-1			ioMachine.liftRamDown
+net spireEngageIn		emcec.0.3.din-2			ioMachine.spireEngageIn
+net spireEngageOut 		emcec.0.3.din-3			ioMachine.spireEngageOut
+net liftFrameLatched	emcec.0.3.din-4			ioMachine.liftFrameLatchEngaged
+net liftFrameUnlatched	emcec.0.3.din-5			ioMachine.liftFrameLatchDisengaged
+net liftFrameMated 		emcec.0.3.din-6			ioMachine.liftFrameMated
+net incomingAirOK 		emcec.0.3.din-7			
+
+#EL1018
+
+net startButton			emcec.0.4.din-0			ioMachine.startButton
+net stopButton			emcec.0.4.din-1			ioMachine.stopButton
+net cycleStartButton	emcec.0.4.din-2			ioMachine.cycleStartButton
+net lubricantLow		emcec.0.4.din-3
+net pressureFilter		emcec.0.4.din-4
+net eStop				emcec.0.4.din-5
+net lightCurtain		emcec.0.4.din-6
+net inverterFault		emcec.0.4.din-7
+
+#EL2008
+
+net lubricationPump		emcec.0.5.dout-0		ioMachine.lubricationPump
+net inverterEnable		emcec.0.5.dout-1		ioMachine.inverterEnable
+net inverterSpeed1		emcec.0.5.dout-2		ioMachine.inverterSpeedBit1
+net inverterSpeed2		emcec.0.5.dout-3		ioMachine.inverterSpeedBit2
+net hydraulicLoad 		emcec.0.5.dout-4		ioMachine.hydraulicLoad
+#emcec.0.5.dout-5
+#emcec.0.5.dout-6
+#emcec.0.5.dout-7
+
+
+#EL2024
+
+net partLiftEnable		emcec.0.6.dout-0		ioMachine.partLiftRam
+net spireEngage			emcec.0.6.dout-1		ioMachine.spireEngage
+net latchLiftFrame		emcec.0.6.dout-2		ioMachine.latchLiftFrame
+net spireLube			emcec.0.6.dout-3 		ioMachine.spireLubeAirAssist
+
+
+
+start
