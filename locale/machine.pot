@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-10-29 10:03+0000\n"
+"POT-Creation-Date: 2012-10-30 23:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,63 +16,63 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gui1.py:329
+#: gui1.py:333
 msgid "Current Program:"
 msgstr ""
 
-#: gui1.py:361
+#: gui1.py:365
 msgid "Current Status: "
 msgstr ""
 
-#: gui1.py:365
+#: gui1.py:369
 msgid "ERROR could not get status"
 msgstr ""
 
-#: gui1.py:762
+#: gui1.py:766
 msgid "Standby"
 msgstr ""
 
-#: gui1.py:763
+#: gui1.py:767
 msgid "Ready"
 msgstr ""
 
-#: gui1.py:764 gui1.glade:520
+#: gui1.py:768 gui1.glade:520
 msgid "Close Vice"
 msgstr ""
 
-#: gui1.py:766
+#: gui1.py:770
 msgid "Cycle"
 msgstr ""
 
-#: gui1.py:767 gui1.glade:503
+#: gui1.py:771 gui1.glade:503
 msgid "Open Vice"
 msgstr ""
 
-#: gui1.py:768 gui1.py:776
+#: gui1.py:772 gui1.py:780
 msgid "Manual"
 msgstr ""
 
-#: gui1.py:769 gui1.py:777
+#: gui1.py:773 gui1.py:781
 msgid "Cycle Aborted"
 msgstr ""
 
-#: gui1.py:771
+#: gui1.py:775
 msgid "Standby - Press start"
 msgstr ""
 
-#: gui1.py:772
+#: gui1.py:776
 msgid "Ready - Hold control for cycle"
 msgstr ""
 
-#: gui1.py:773
+#: gui1.py:777
 msgid "Close Vice - Hold control to close vice"
 msgstr ""
 
-#: gui1.py:774
+#: gui1.py:778
 msgid "Cycle - Forming tube"
 msgstr ""
 
-#: gui1.py:775
+#: gui1.py:779
 msgid "Open Vice - Hold control to open vice"
 msgstr ""
 
@@ -116,7 +116,11 @@ msgstr ""
 msgid "Clearance Position X"
 msgstr ""
 
-#: motionProgram.py:65
+#: motionProgram.py:63
+msgid " (COPY)"
+msgstr ""
+
+#: motionProgram.py:66
 msgid "Default Program"
 msgstr ""
 

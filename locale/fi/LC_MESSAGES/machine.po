@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: machine\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-10-29 10:03+0000\n"
+"POT-Creation-Date: 2012-10-30 23:12+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -11,67 +11,67 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Finnish\n"
 
-#: gui1.py:329
+#: gui1.py:333
 msgid "Current Program:"
 msgstr "Tämänhetkinen ohjelma:"
 
-#: gui1.py:361
+#: gui1.py:365
 msgid "Current Status: "
 msgstr "Tämänhetkinen Asema: "
 
-#: gui1.py:365
+#: gui1.py:369
 msgid "ERROR could not get status"
 msgstr ""
 
-#: gui1.py:762
+#: gui1.py:766
 msgid "Standby"
 msgstr "Valmiustila"
 
-#: gui1.py:763
+#: gui1.py:767
 msgid "Ready"
 msgstr "Valmis"
 
-#: gui1.py:764
+#: gui1.py:768
 #: gui1.glade:520
 msgid "Close Vice"
 msgstr "Sulje leuka"
 
-#: gui1.py:766
+#: gui1.py:770
 msgid "Cycle"
 msgstr "Työkierto"
 
-#: gui1.py:767
+#: gui1.py:771
 #: gui1.glade:503
 msgid "Open Vice"
 msgstr "Avaa leuka"
 
-#: gui1.py:768
-#: gui1.py:776
+#: gui1.py:772
+#: gui1.py:780
 msgid "Manual"
 msgstr "Käsiajo"
 
-#: gui1.py:769
-#: gui1.py:777
+#: gui1.py:773
+#: gui1.py:781
 msgid "Cycle Aborted"
 msgstr ""
 
-#: gui1.py:771
+#: gui1.py:775
 msgid "Standby - Press start"
 msgstr "Valmiustila - Paina käynnistys"
 
-#: gui1.py:772
+#: gui1.py:776
 msgid "Ready - Hold control for cycle"
 msgstr "Valmis - Pidä ohjaus aloittaaksesi työkierto"
 
-#: gui1.py:773
+#: gui1.py:777
 msgid "Close Vice - Hold control to close vice"
 msgstr "Sulje leuka - Pidä ohjaus sulkeaksesi leuka"
 
-#: gui1.py:774
+#: gui1.py:778
 msgid "Cycle - Forming tube"
 msgstr "Työkierto - muotoillaan putkea"
 
-#: gui1.py:775
+#: gui1.py:779
 msgid "Open Vice - Hold control to open vice"
 msgstr "Avaa leuka - Pidä ohjaus avaaksesi leuka"
 
@@ -115,7 +115,11 @@ msgstr "Avaa leuka Ajastin"
 msgid "Clearance Position X"
 msgstr "Puhdistuma Asema X"
 
-#: motionProgram.py:65
+#: motionProgram.py:63
+msgid " (COPY)"
+msgstr " (KOPIO)"
+
+#: motionProgram.py:66
 msgid "Default Program"
 msgstr ""
 

@@ -280,6 +280,11 @@ net modeManual				machine.modeManual			halui.mode.manual
 #loadusr /home/user/installation/gui1.py
 # commands in hmi.hal will be called after setup of module
 
+#loadusr /home/user/installation/graph.py
+#loadusr /home/user/installation/gui1.py
+
+
+
 # do this last to avoid watchdog
 net mesa-7i65.ldac    		hm2_5i20.0.gpio.021.out
 net mesa-7i65.enable  		hm2_5i20.0.gpio.022.out

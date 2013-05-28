@@ -1,69 +1,70 @@
 # load ethercat master
 
-loadusr -W emcec_conf IOMachineMasterConfig.xml
-loadrt emcec
 
 loadrt threads name1=master period1=1000000
 
-addf emcec.read-all master
-addf emcec.write-all master
-
-# TODO: PID
-
 loadrt ioMachine
-setp ioMachine.requestManual 1
+
 addf ioMachine master
 
 loadrt scale count=2
 addf scale.0 master
 addf scale.1 master
 
-loadrt pid scale num_chan=2
-addf pid.0.do-pid-calcs master
-addf pid.1.do-pid-calcs master
-
-net 
-
-# TODO: scale input values to mm
-# tan 6 degrees  
-setp scale.0.gain	0.10510423526567646251
-
-# tan 7 degrees
-setp scale.1.gain	0.12278456090290459113
-
-#net iAxisPosition 		emcec.0.1.ain-0-val		ioMachine.iAxisPosition
-#net oAxisPosition 		emcec.0.1.ain-1-val		ioMachine.oAxisPosition
+loadrt pid num_chan=2
+addf pid.0.do-pid-calcs 	master
+addf pid.1.do-pid-calcs 	master
+setp scale.0.gain 1.0
+setp scale.1.gain 1.0
 
 
+net iAxisEnable			pid.0.enable
+net oAxisEnable 		pid.1.enable
+
+net iAxisCommand 		pid.0.command
+net oAxisCommand 		pid.1.command
+
+net iAxisScale 			scale.0.gain			ioMachine.iAxisScale
+net iAxisOffset 		scale.0.offset 			ioMachine.iAxisOffset
+net oAxisScale 			scale.1.gain			ioMachine.oAxisScale
+net oAxisOffset			scale.1.offset 			ioMachine.oAxisOffset
+
+net iAxisPositionRaw 	scale.0.in				ioMachine.iAxisPositionRaw
+net oAxisPositionRaw 	scale.1.in				ioMachine.oAxisPositionRaw
+
+net iAxisPosition 		scale.0.out				ioMachine.iAxisPosition
+net oAxisPosition	 	scale.1.out				ioMachine.oAxisPosition
 
 loadrt mux2 count=2
+addf mux2.0 master
+addf mux2.1 master
 
-net iAxisManualCommand	ioMachine.iAxisCommand	mux2.0.in0
-net iAxisAutoCommand	pid.0.output			mux2.0.in1
+net iAxisManualCommand	ioMachine.iAxisManualCommand	mux2.0.in0
+net iAxisAutoCommand	pid.0.output					mux2.0.in1
+net iAxisEnablePid		ioMachine.iAxisEnablePid 		mux2.0.sel
 
-net oAxisManualCommand	ioMachine.oAxisCommand	mux2.1.in0
-net oAxisAutoCommand	pid.1.output			mux2.1.in1
+net oAxisManualCommand	ioMachine.oAxisManualCommand	mux2.1.in0
+net oAxisAutoCommand	pid.1.output					mux2.1.in1
+net oAxisEnablePid		ioMachine.oAxisEnablePid 		mux2.1.sel
 
+# ethercat master and connections
+loadusr -W emcec_conf IOMachineMasterConfig.xml
+loadrt emcec
 
-#
+addf emcec.read-all 	master
+addf emcec.write-all 	master
+
 # machine IO as per wiring diagram
-#
-
 #EL3062
-net iAxisPosition 		emcec.0.1.ain-0-val		scale.0.in
-net oAxisPosition 		emcec.0.1.ain-1-val		scale.1.in
+net iAxisPositionRaw 	emcec.0.1.ain-0-val
+net oAxisPositionRaw 	emcec.0.1.ain-1-val
 
 #EL4032
-#net iAxisCommand 		emcec.0.2.aout-0-value  ioMachine.iAxisCommand
 net iAxisOutputCommand	emcec.0.2.aout-0-value  mux2.0.out
 net iAxisEnable	  		emcec.0.2.aout-0-enable ioMachine.iAxisEnable
-net iAxisEnable			pid.0.enable
 
-
-#net oAxisCommand 		emcec.0.2.aout-1-value  ioMachine.oAxisCommand
 net oAxisOutputCommand	emcec.0.2.aout-1-value  mux2.1.out
 net oAxisEnable 		emcec.0.2.aout-1-enable ioMachine.oAxisEnable
-net oAxisEnable 		pid.1.enable
 
 #EL1018
 
@@ -109,3 +110,4 @@ net spireLube			emcec.0.6.dout-3 		ioMachine.spireLubeAirAssist
 
 
 start
+setp ioMachine.requestManual 1

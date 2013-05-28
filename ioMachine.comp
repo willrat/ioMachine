@@ -50,22 +50,22 @@ pin out bit 		latchLiftFrame;
 pin out bit 		spireLubeAirAssist;
 
 
-// some io for the pid loops
+// io for positions
 pin out float 		oAxisCommand;
 pin in float		oAxisPosition;
-pin out bit			oAxisEnable;
+pin in float		oAxisPositionRaw;
+pin out bit			oAxisEnable;  //enable analog out
+pin out bit			oAxisEnablePid; //
 
 pin out float 		iAxisCommand;
 pin in float		iAxisPosition;
+pin in float		iAxisPositionRaw;
 pin out bit			iAxisEnable;
+pin out bit			iAxisEnablePid; //
 
-pin in bit          startEdge;
-pin in bit          requestManual;
 
-pin in float        cycleTimeOut;
-pin in float        readyTimeOut;
 
-// manual controls
+// manual and calibration
 
 pin out float		iAxisManualCommand;
 pin out float		oAxisManualCommand;
@@ -74,11 +74,16 @@ pin in bit			manualTogglePartUp;
 pin in bit			manualToggleLiftCatch;
 pin in bit			manualToggleSpireEngage;
 
+
 pin in bit			hydraulicsOff;
 pin in bit			hydraulicSpeed1;
 pin in bit			hydraulicSpeed2;
 pin in bit			hydraulicSpeed3;
 pin in bit			manualHydraulicLoad;
+
+pin out signed		hydraulicSpeed;
+pin io signed		requestHydraulicSpeed;
+
 
 pin in float		iJogSpeed;
 pin in float		oJogSpeed;
@@ -88,25 +93,38 @@ pin in bit 			oJogPlus;
 pin in bit			oJogMinus;
 
 
-// // outputs
-pin out bit         enableJogButtons;
-pin out bit         enableManual;
+
+
+// hmi etc
+pin in bit          startEdge;
+
+pin in float        cycleTimeOut;
+pin in float        readyTimeOut;
+
+
+
+
 pin out float       lastCycle;
 
 // pin and variables
 pin out u32         currentState;          // for display in hmi
-pin out float       clampTimerRemain;
+pin out unsigned	currentOperation;		// operation number in motion starting 0
+
+pin in bit          requestManual;
+pin io signed		requestState;
+pin out bit         stateLocked;
+
+
+pin out unsigned    clampTimerRemain;
 pin out float       clampTimerRemainSeconds;
 
 //pin out float       spindleTimerRemain;
 
-pin out float       cycleTimerRemain;
-pin out float       readyTimerRemain;
+pin out unsigned    cycleTimerRemain;
+pin out unsigned    readyTimerRemain;
 pin out float       readyTimerRemainSeconds;
 
 // parameters
-
-
 pin out signed		lubricationCounter;
 param rw unsigned	lubricateCycleCounter;
 
@@ -117,15 +135,34 @@ param rw unsigned	lubricateCycleCounter;
  */
 
 //position for tool release
-param rw float		oAxisToolReleasePosition;
+pin in float		oAxisToolReleasePosition;
 // position for part lift clearance;
-param rw float 		oAxisPartLiftPosition;
-param rw float		oAxisLubricationPosotion;
+pin in float 		oAxisPartLiftPosition;
+pin in float		oAxisLubricationPosition;
 
-param rw unsigned	operationtype-#[10];
-param rw float		position-#[10];
+// operation type -1 no op; 0 I op; 1 O op
+pin in signed		operationType-#[10];
+pin in float		position-#[10];
 
 
+//calibration data
+// this data is from the calibration state...
+// this can be loaded from the hmi and also
+// configured from the calibration_state
+
+//pin out signed 		calibrationTimer;
+pin out float		calibrationTimerSeconds;
+pin out signed		calibrationCounter;
+
+pin io float		iAxisOffset;
+pin io float		iAxisScale;
+pin io float		oAxisOffset;
+pin io float		oAxisScale;
+
+pin out float		iTop;
+pin out float		iBottom;
+pin out float		oTop;
+pin out float		oBottom;
 
 
 // Global Variables
@@ -135,33 +172,42 @@ variable int old_start;
 //variable double clampTimerRemain;
 //variable double spindleTimerRemain;
 
-variable double gPeriod;
+variable long gPeriod;
+
 
 function _;
 
 ;;
 
+long long calibrationTimer;
+long long hydraulicTimer;
+
 #include "rtapi_math.h"
 
-enum states {   STATE_STANDBY = 0,
+enum states {   STATE_INITIAL = 0,
+				STATE_STANDBY,
 				STATE_PREPAREREADY,
 				STATE_NOTOOL,
                 STATE_READY,
-                STATE_PREPARETOOLRELEASE,
+                STATE_PREPARETOOLRELEASE,		//5
                 STATE_TOOLRELEASED,
                 STATE_LOWERPART,
                 STATE_MOTION,
                 STATE_FINALISE,
-                STATE_RAISEPART,
+                STATE_RAISEPART,  				//10
                 STATE_MANUAL,
                 STATE_CYCLE_ABORT,
                 STATE_LUBRICANT_LOW,
                 STATE_NO_AIR,
-                STATE_FILTER_BLOCKED,
+                STATE_FILTER_BLOCKED,   		//15
                 STATE_INVERTER_FAULT,
                 STATE_ESTOP,
+                STATE_CALIBRATE,				//18
                 MAX_STATES };
 
+//enum hydarulicSpeed { 	HYDRAULIC_OFF,
+//						HYDRAULIC_1,
+//					}
 
 
 //if we have changed state
@@ -179,13 +225,101 @@ static void change_state(struct __comp_state *__comp_inst, int new_state){
 }
 
 // utility funcs...
-static float to_nanoseconds(struct __comp_state *__comp_inst, float seconds){
-    return seconds * 1000000000.0;
+//static float to_nanoseconds(struct __comp_state *__comp_inst, float seconds){
+static long long to_nanoseconds(struct __comp_state *__comp_inst, float seconds){
+    return (long long)(seconds * 1000000000.0);
 }
 
-static float to_seconds(struct __comp_state *__comp_inst, float nanoseconds){
-    return nanoseconds * 0.000000001;
+static float to_seconds(struct __comp_state *__comp_inst, long long nanoseconds){
+    return ((float)nanoseconds) * 0.000000001;
 }
+
+static void hydraulic_state(struct __comp_state *__comp_inst){
+
+	if (hydraulicTimer > 0)
+		hydraulicTimer -= gPeriod;
+
+	// requested faster speed
+	if (requestHydraulicSpeed > hydraulicSpeed && hydraulicTimer <= 0){
+		hydraulicSpeed++;
+		hydraulicTimer = to_nanoseconds(__comp_inst, 0.5);
+	}
+
+	if (requestHydraulicSpeed < hydraulicSpeed)
+		hydraulicSpeed--;
+
+	switch (hydraulicSpeed){
+	case 0:
+		inverterEnable = false;
+		inverterSpeedBit1 = false;
+		inverterSpeedBit2 = false;
+		hydraulicLoad = false;
+		break;
+	case 1:
+		inverterEnable = true;
+		inverterSpeedBit1 = true;
+		inverterSpeedBit2 = false;
+		hydraulicLoad = false;
+		break;
+	case 2:
+		inverterEnable = true;
+		inverterSpeedBit1 = false;
+		inverterSpeedBit2 = true;
+		break;
+	case 3:
+		inverterEnable = true;
+		inverterSpeedBit1 = true;
+		inverterSpeedBit2 = true;
+		break;
+	}
+}
+
+static void set_hydraulic_load(struct __comp_state *__comp_inst, bool on){
+	if (on && hydraulicSpeed > 1){
+		hydraulicLoad = true;
+	} else {
+		hydraulicLoad = true;
+	}
+}
+
+static void set_hydraulic_speed(struct __comp_state *__comp_inst, int speed){
+
+	if (speed > 3)
+		speed = 3;
+
+	requestHydraulicSpeed = speed;
+
+//	switch (speed){
+//	case 0:
+//		inverterEnable = false;
+//		inverterSpeedBit1 = false;
+//		inverterSpeedBit2 = false;
+//		break;
+//	case 1:
+//		inverterEnable = true;
+//		inverterSpeedBit1 = true;
+//		inverterSpeedBit2 = false;
+//		break;
+//	case 2:
+//		inverterEnable = true;
+//		inverterSpeedBit1 = false;
+//		inverterSpeedBit2 = true;
+//		break;
+//	case 3:
+//		inverterEnable = true;
+//		inverterSpeedBit1 = true;
+//		inverterSpeedBit2 = true;
+//		break;
+//	}
+}
+
+static void request_hydraulic_speed(struct __comp_state *__comp_inst, int speed){
+
+}
+
+/*
+ *  State Machine Functions
+ */
 
 static void state_estop(struct __comp_state *__comp_inst){
 	if (state_entry) {
@@ -193,6 +327,15 @@ static void state_estop(struct __comp_state *__comp_inst){
 	}
 	if (!eStop)
 		change_state(__comp_inst, STATE_STANDBY);
+}
+
+static void state_initial(struct __comp_state *__comp_inst){
+	if (state_entry){
+		state_entry = false;
+	}
+
+	change_state(__comp_inst, STATE_STANDBY);
+
 }
 
 static void state_standby(struct __comp_state *__comp_inst){
@@ -208,21 +351,21 @@ static void state_standby(struct __comp_state *__comp_inst){
         spireEngage = true;
         latchLiftFrame = true;
 
-
-
-        // TODO: these can be wrapped in function
-        inverterEnable = false;
-        inverterSpeedBit1 = false;
-        inverterSpeedBit2 = false;
-        hydraulicLoad = false;
+        set_hydraulic_speed(__comp_inst, 0);
     }
 
+
+    if (requestState == STATE_CALIBRATE){
+    	change_state(__comp_inst, STATE_CALIBRATE);
+    	requestState = -1;
+    }
 
     if (requestManual)
     	change_state(__comp_inst, STATE_MANUAL);
 
     if (startButton) {
-    	change_state(__comp_inst, STATE_READY);
+    	//change_state(__comp_inst, STATE_READY);
+    	change_state(__comp_inst, STATE_PREPAREREADY);
     }
 }
 
@@ -231,6 +374,7 @@ static void state_prepareready(struct __comp_state *__comp_inst){
     if (state_entry){
         state_entry = false;
         prepareReadyCounter = 0;
+        set_hydraulic_speed(__comp_inst, 1);
     }
 
     if (!liftFrameMated){
@@ -244,22 +388,35 @@ static void state_prepareready(struct __comp_state *__comp_inst){
     		prepareReadyCounter++;
     	break;
     case 1:
+    	set_hydraulic_speed(__comp_inst, 2);
+    	if (hydraulicSpeed == 2){
+    		prepareReadyCounter++;
+    		set_hydraulic_load(__comp_inst, true);
+    	}
+    	break;
+    case 2:
     	// move the head up (so the tool lift can move into place)
     	//oAxisPosition = 10.0f;
-    	oAxisCommand = 10.0;
+    	//oAxisCommand = 10.0;
 
+    	// TODO: motion
     	if (true) {
     		prepareReadyCounter++;
     		// start the ram lifting
     		partLiftRam = true;
+    		// TODO: turn off hyd.
+    		set_hydraulic_speed(__comp_inst, 1);
+    		set_hydraulic_load(__comp_inst, false);
     	}
-    case 2:
+    	break;
+    case 3:
     	// filter the listRamUp for 100ms
     	if (liftRamUp){
     		prepareReadyCounter++;
     		cycleTimerRemain = to_nanoseconds(__comp_inst, 0.1f);
     	}
-    case 3:
+    	break;
+    case 4:
     	if (!liftRamUp)
     		prepareReadyCounter--;
 
@@ -277,10 +434,10 @@ static void state_ready(struct __comp_state *__comp_inst){
     if (state_entry){
         state_entry = false;
 
-        inverterEnable = true;
-        inverterSpeedBit1 = false;
-        inverterSpeedBit2 = false;
-        hydraulicLoad = false;
+//        inverterEnable = true;
+//        inverterSpeedBit1 = false;
+//        inverterSpeedBit2 = false;
+//        hydraulicLoad = false;
 
 
         readyTimerRemain = to_nanoseconds(__comp_inst, readyTimeOut);
@@ -304,13 +461,12 @@ static void state_ready(struct __comp_state *__comp_inst){
 
     readyTimerRemain -= gPeriod; //decrement timer by period
     
-    //if (footPedal)
-    if (startEdge){
+    if (cycleStartButton){
 
     	change_state(__comp_inst, STATE_LOWERPART);
 
         //change_state(__comp_inst, STATE_CLOSEVICE);
-        //stateLocked = true;
+        stateLocked = true;
     }
 }
 
@@ -361,12 +517,10 @@ static void state_lowerpart(struct __comp_state *__comp_inst){
     if (state_entry){
         state_entry = false;
         partLiftRam = false;
-
+        set_hydraulic_speed(__comp_inst, 2);
     }
 
-    // TODO: Time out
-
-    if (liftRamDown){
+    if (liftRamDown && hydraulicSpeed == 2){
         change_state(__comp_inst, STATE_MOTION);
     }
 }
@@ -383,12 +537,18 @@ static void state_raisepart(struct __comp_state *__comp_inst){
 
     if (liftRamUp){
         change_state(__comp_inst, STATE_READY);
+        stateLocked = false;
     }
 }
+
 
 static void state_motion(struct __comp_state *__comp_inst){
 
     bool exit = false;
+    float currentTarget = 0.0;
+    float currentError = 0.0;
+    float currentPosition = 0.0;
+    static bool newTarget = true;
 
     if (state_entry){
         state_entry = false;
@@ -399,29 +559,77 @@ static void state_motion(struct __comp_state *__comp_inst){
         if (cycleTimerRemain <= 0.0)
             cycleTimerRemain = to_nanoseconds(__comp_inst, 60.0);
 
-        //enableMotion = 1;
-        //isRunningSeen = false;
+        currentOperation = 0;
+        newTarget = true;
+        iAxisEnablePid = true;
+        oAxisEnablePid = true;
     }
 
     // decrement timer
     cycleTimerRemain -= gPeriod;
 
+
+    if (newTarget)
+    {
+		switch (operationType(currentOperation)){
+
+		case 0:
+			// I operation
+			iAxisEnable = true;
+			//hydraulicLoad = true;
+			iAxisCommand = position(currentOperation);
+			currentPosition = iAxisPosition;
+			break;
+		case 1:
+			// O operation
+			oAxisEnable = true;
+			//hydraulicLoad = true;
+			oAxisCommand = position(currentOperation);
+			currentPosition = oAxisPosition;
+			break;
+		case -1:
+			//last operation
+			//exit = true;
+
+
+			break;
+		}
+
+		currentTarget = position(currentOperation);
+		newTarget = false;
+    }
+
+
+    currentError = abs(currentPosition - currentTarget);
+
+    if (currentError < 0.01){ // TODO: deadband could param'd
+    	// in position next
+    	currentOperation++;
+        iAxisEnable = false;
+        oAxisEnable = false;
+        hydraulicLoad = false;
+        newTarget = true;
+    }
+
     // cycle did not complete in time
     if (cycleTimerRemain <= 0.0){
-        //error = true; // debugging
-        change_state(__comp_inst, STATE_STANDBY);
+        //change_state(__comp_inst, STATE_FINALISE);
+    	exit = true;
     }
 
     // cycle aborted
     if (stopButton){
-    	//change_state(__comp_inst, STATE_STANDBY);
-    	change_state(__comp_inst, STATE_FINALISE);
+    	//change_state(__comp_inst, STATE_FINALISE);
+    	exit = true;
     }
 
-    // goto open vice
     if (exit){
-
+    	iAxisEnable = false;
+    	oAxisEnable = false;
+    	iAxisEnablePid = false;
+    	oAxisEnablePid = false;
     	change_state(__comp_inst, STATE_FINALISE);
+
     }
 
 }
@@ -435,15 +643,78 @@ static void state_finalise(struct __comp_state *__comp_inst){
 }
 
 static void state_calibrate(struct __comp_state *__comp_inst){
+
+	bool exit = false;
+
 	if (state_entry){
 		state_entry = false;
-		hydraulicLoad = true;
+		//hydraulicLoad = true;
+		iTop = 0.0;
+		iBottom = 0.0;
+		oTop = 0.0;
+		oBottom = 0.0;
+
+		calibrationTimer = to_nanoseconds(__comp_inst, 1.0);
+		calibrationCounter = 0;
+
+		set_hydraulic_speed(__comp_inst, 2);
+		stateLocked = true;
 	}
 
-	//move both axis to the minimum position and record
+	calibrationTimer -= gPeriod;
 
 
+	if (calibrationTimer <= 0){
 
+		switch (calibrationCounter){
+		case 0:
+			hydraulicLoad = true;
+			calibrationTimer = to_nanoseconds(__comp_inst, 0.25);
+			break;
+		case 1:
+			calibrationTimer = to_nanoseconds(__comp_inst, 7.0);
+			oAxisManualCommand = 1.0;
+			iAxisManualCommand = 1.0;
+			iAxisEnable = true;
+			oAxisEnable = true;
+			break;
+		case 2:
+			calibrationTimer = to_nanoseconds(__comp_inst, 7.0);
+			iTop = iAxisPositionRaw;
+			oTop = oAxisPositionRaw;
+			oAxisManualCommand = -1.0;
+			iAxisManualCommand = -1.0;
+			break;
+		case 3:
+			iBottom = iAxisPositionRaw;
+			oBottom = oAxisPositionRaw;
+
+			oAxisManualCommand = 0.0;
+			iAxisManualCommand = 0.0;
+
+			iAxisScale = abs(iTop-iBottom)/85.0;
+			iAxisScale *= 0.10510423526567646251;
+			iAxisOffset = iTop * iAxisScale;
+
+			oAxisScale = abs(oTop-oBottom)/80.0;
+			oAxisScale *= 0.12278456090290459113;
+			oAxisOffset = oTop * oAxisScale;
+
+			exit = true;
+
+			break;
+		}
+		calibrationCounter++;
+	}
+
+	if (exit){
+		stateLocked = false;
+		hydraulicLoad = false;
+		iAxisEnable = false;
+		oAxisEnable = false;
+		set_hydraulic_speed(__comp_inst, 0);
+		change_state(__comp_inst, STATE_STANDBY);
+	}
 }
 
 static void state_manual(struct __comp_state *__comp_inst){
@@ -451,7 +722,7 @@ static void state_manual(struct __comp_state *__comp_inst){
 
     if (state_entry){
         state_entry = false;
-        enableManual = 1;
+        //enableManual = 1;
         inverterEnable = false;
     }
 
@@ -496,19 +767,11 @@ static void state_manual(struct __comp_state *__comp_inst){
     	oAxisEnable = false;
     }
 
-
-
-
-
-
-
     /*
     pin in bit			manualTogglePartUp;
     pin in bit			manualToggleLiftCatch;
     pin in bit			manualToggleSpireEngage;
     */
-
-
 
     if (manualTogglePartUp){
     	// TODO: if outer-ring is not at top
@@ -543,26 +806,30 @@ static void state_manual(struct __comp_state *__comp_inst){
 
 
     if (hydraulicsOff) {
-    	inverterEnable = false;
+    	set_hydraulic_speed(__comp_inst, 0);
     	hydraulicLoad = false;
-    	inverterSpeedBit1 = false;
-    	inverterSpeedBit2 = false;
+//    	inverterEnable = false;
+//    	inverterSpeedBit1 = false;
+//    	inverterSpeedBit2 = false;
     }
 
     if (hydraulicSpeed1) {
-    	inverterEnable = true;
-    	inverterSpeedBit1 = true;
-    	inverterSpeedBit2 = false;
+    	set_hydraulic_speed(__comp_inst, 1);
+//    	inverterEnable = true;
+//    	inverterSpeedBit1 = true;
+//    	inverterSpeedBit2 = false;
     }
     if (hydraulicSpeed2) {
-    	inverterEnable = true;
-    	inverterSpeedBit1 = false;
-    	inverterSpeedBit2 = true;
+    	set_hydraulic_speed(__comp_inst, 2);
+//    	inverterEnable = true;
+//    	inverterSpeedBit1 = false;
+//    	inverterSpeedBit2 = true;
     }
     if (hydraulicSpeed3) {
-    	inverterEnable = true;
-    	inverterSpeedBit1 = true;
-    	inverterSpeedBit2 = true;
+    	set_hydraulic_speed(__comp_inst, 3);
+//    	inverterEnable = true;
+//    	inverterSpeedBit1 = true;
+//    	inverterSpeedBit2 = true;
     }
 
     if (!requestManual){
@@ -577,10 +844,13 @@ static void state_manual(struct __comp_state *__comp_inst){
     }
 }
 
+
+
 //update timer in seconds outputs
 static void update_timer_outs(struct __comp_state *__comp_inst){
     clampTimerRemainSeconds = to_seconds(__comp_inst, clampTimerRemain);
     readyTimerRemainSeconds = to_seconds(__comp_inst, readyTimerRemain);
+    calibrationTimerSeconds = to_seconds(__comp_inst, calibrationTimer);
 }
 
 FUNCTION(_) {
@@ -619,11 +889,15 @@ FUNCTION(_) {
 //    if (eStop)
 //    	change_state(__comp_inst, STATE_ESTOP);
 
-
+    // process hydraulics
+    hydraulic_state(__comp_inst);
     
     // switch on state
     switch (currentState)
     {
+    case STATE_INITIAL:
+    	state_initial(__comp_inst);
+    	break;
     case STATE_STANDBY:
     	state_standby(__comp_inst);
     	break;
@@ -654,9 +928,13 @@ FUNCTION(_) {
     case STATE_ESTOP:
     	state_estop(__comp_inst);
     	break;
+    case STATE_CALIBRATE:
+    	state_calibrate(__comp_inst);
+    	break;
     case MAX_STATES:
     	state_ready(__comp_inst);
     	break;
+
     }
 }
 

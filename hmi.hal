@@ -1,43 +1,70 @@
-# what would be called POSTGUI...
 
-net 	currentState 				machine.currentState 			hmi.currentState
-net 	manualRequest 				machine.requestManual			hmi.requestManual
-net 	cycleStatus					machine.cycleStatus				hmi.cycleStatus
+net liftRamUp 			     hmi.liftRamUpLed
+net liftRamDown 		    hmi.liftRamDownLed
+net spireEngageIn		hmi.spireEngageInLed
+net spireEngageOut 		hmi.spireEngageOutLed
+net liftFrameLatched	hmi.liftFrameEngagedLed
+net liftFrameUnlatched	hmi.liftFrameDisengagedLed
+net liftFrameMated 		hmi.liftFrameMatedLed
+#net incomingAirOK 		emcec.0.3.din-7			
 
-# debug
-#show pin hmi.unclampTime
+#net 	iAxisPosition			hmi.iPositionLabel
+#net 	oAxisPosition			hmi.oPositionLabel
+net   iAxisPositionRaw      hmi.iPositionLabel
+net   oAxisPositionRaw      hmi.oPositionLabel
 
-net 	unclampTime					machine.unclampTime				hmi.unclampTime
+net 	incomingAirOK			hmi.airOKLed
 
-net 	viceOpenToggle				machine.viceOpenJog				hmi.viceOpenToggle
-net 	viceCloseToggle				machine.viceCloseJog			hmi.viceCloseToggle
+    
+#     8  bit   IN          FALSE  ioMachine.manualToggleLiftCatch
+#     8  bit   IN          FALSE  ioMachine.manualTogglePartUp
+#     8  bit   IN          FALSE  ioMachine.manualToggleSpireEngage
 
-net 	enableJogButtons			machine.enableJogButtons		hmi.enableJogButtons
-net 	hydraulicAxisJog			machine.hydraulicAxisJog		hmi.hydraulicAxisJog
+# air controls manual
+net manualToggleLiftCatch 		ioMachine.manualToggleLiftCatch		hmi.latchEngageButton
+net manualTogglePartUp 			ioMachine.manualTogglePartUp		hmi.liftEngageButton
+net manualToggleSpireEngage 	ioMachine.manualToggleSpireEngage	hmi.spireEngageButton
 
-# status leds etc
+# hydraulics control manual
+net		hydraulicsOff 			ioMachine.hydraulicsOff 			hmi.hydraulicsOff
+net		hydraulicSpeed1 		ioMachine.hydraulicSpeed1		 	hmi.hydraulicSpeed1
+net		hydraulicSpeed2 		ioMachine.hydraulicSpeed2 			hmi.hydraulicSpeed2
+net		hydraulicSpeed3 		ioMachine.hydraulicSpeed3 			hmi.hydraulicSpeed3
+net 	manualHydraulicLoad		ioMachine.manualHydraulicLoad		hmi.hydraulicLoadButton
 
-net 	mcb1						hmi.mcb1Led
-net 	mcb2						hmi.mcb2Led
-net 	mcb3						hmi.mcb3Led
+net 	oAxisJogSpeed		ioMachine.oJogSpeed					hmi.oJogSpeed
+net 	iAxisJogSpeed		ioMachine.iJogSpeed					hmi.iJogSpeed
 
-net 	stopButton 					hmi.stopButtonLed
-net 	startButton 				hmi.startButtonLed
+net		iJogPlus			ioMachine.iJogPlus					hmi.iJogPlus
+net		iJogMinus			ioMachine.iJogMinus					hmi.iJogMinus
+net 	oJogPlus			ioMachine.oJogPlus					hmi.oJogPlus
+net		oJogMinus			ioMachine.oJogMinus					hmi.oJogMinus
 
-net 	viceRelay 					hmi.viceRelayLed
-net 	eStopRelay 					hmi.eStopRelayLed
-net 	eStopRelay 					hmi.eStopRelayMainStatusLed
+net 	currentState 				ioMachine.currentState 			hmi.currentState
+net 	requestManual 				ioMachine.requestManual		hmi.requestManual
+net   stateLocked           ioMachine.stateLocked     hmi.stateLocked
+net   requestState          ioMachine.requestState    hmi.requestState
+#net 	cycleStatus					machine.cycleStatus				hmi.cycleStatus
 
-net 	twoHandRelay				hmi.twoHandRelayLed
-
-net 	viceSwitchDiagnostic		hmi.viceSwitchDiagnosticLed
-net 	guardSwitchDiagnostic 		hmi.guardSwitchDiagnosticLed
+# calibration data
 
 
-#    h.newpin("mcb1", hal.HAL_BIT, hal.HAL_IN)
-#    h.newpin("currentState", hal.HAL_U32, hal.HAL_IN)
-  
-#    h.newpin("stateRequest", hal.HAL_U32, hal.HAL_OUT)
-#    h.newpin("manualRequest", hal.HAL_BIT, hal.HAL_OUT)
-  
-#    h.newpin("unclampTime", hal.HAL_FLOAT, hal.HAL_OUT)
+net   calibrationCounter    ioMachine.calibrationCounter  hmi.calibrationCounter
+net   calibrationTimer      ioMachine.calibrationTimerSeconds  hmi.calibrationTimer
+
+net   iTop          ioMachine.iTop        hmi.iTop
+net   iBottom       ioMachine.iBottom     hmi.iBottom
+net   oTop          ioMachine.oTop        hmi.oTop
+net   oBottom       ioMachine.oBottom     hmi.oBottom
+
+net   iAxisOffset       hmi.iOffset
+net   oAxisOffset       hmi.oOffset
+net   iAxisScale        hmi.iScale
+net   oAxisScale        hmi.oScale
+
+net   iAxisPosition     hmi.iAxisPosition
+net   oAxisPosition     hmi.oAxisPosition
+
+net startButton     hmi.startButtonLed
+net stopButton      hmi.stopButtonLed
+

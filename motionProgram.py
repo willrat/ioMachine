@@ -1,19 +1,7 @@
 import emc
 import copy
 
-#import gettext
-#import language
 from language import *
-
-#parameters = [ _('Program Name'),
-#               _('Forming Start Position X (mm)'),
-#               _('Forming Start Position Y (mm)'),
-#               _('Forming Position Y  (mm)'),
-#               _('Forming Feed  (mm/s)'),
-#               _('Forming Dwell (s)'),
-#               _('Tube Stop Position X  (mm)'),
-#               _('Tube Stop Position Y (mm)'),
-#               _('Vice Unclamp Timer (s)')]
 
 parameters = [ _('Program Name'),
                _('Forming Start Position X'),
@@ -48,6 +36,18 @@ units = ['',
          's',
          'mm']
 
+#limits = [( -1,-1 ),(1,1) ]
+maxValue = [0.0,
+            100.0,
+            22.0,
+            22.0,
+            150.0,
+            10.0,
+            98.0,
+            22.0,
+            2.0,
+            100.0]
+
 
 command = emc.command()
 status = emc.stat()
@@ -60,6 +60,7 @@ class motionProgram():
     if mp:
       print "MOTION PROGRAM: Creating copy"
       self.program = copy.deepcopy(mp.program)
+      self.program[0] = self.program[0] + _(" (COPY)")
     else:
       print "MOTION PROGRAM: Creating new default"
       self.program = [_('Default Program'),
@@ -121,9 +122,11 @@ class motionProgram():
         return self.program[counter]
       counter = counter + 1
 
+  #  static
   def getParameterLabel(self, index):
     return parameters[int(index)]
 
+  #  static
   def isNumeric(self, index):
     try:
       if isNumeric[int(index)]:
@@ -132,5 +135,22 @@ class motionProgram():
         return False
     except:
       return False
+
+  # not used
+  def checkRange(self, index):
+    value = float(self.program[index])
+    maxVal = float(maxValue[index])
+
+    if value > max:
+      self.program[index] = max[index]
+
+  #  static
+  @staticmethod
+  def validateValue(index, value):
+    maxVal = float(maxValue[index])
+    if value > maxVal:
+      return maxVal
+    return value
+
 
 

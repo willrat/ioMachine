@@ -16,6 +16,6 @@ def initEnglish():
   english.install()
 
 
-#initFinnish()
+# initFinnish()
 initEnglish()
 
