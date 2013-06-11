@@ -11,33 +11,42 @@ loadrt scale count=2
 addf scale.0 master
 addf scale.1 master
 
-loadrt pid num_chan=2
-addf pid.0.do-pid-calcs 	master
-addf pid.1.do-pid-calcs 	master
-setp scale.0.gain 1.0
-setp scale.1.gain 1.0
-
-
-net iAxisEnable			pid.0.enable
-net oAxisEnable 		pid.1.enable
-
-net iAxisCommand 		pid.0.command
-net oAxisCommand 		pid.1.command
-
 net iAxisScale 			scale.0.gain			ioMachine.iAxisScale
 net iAxisOffset 		scale.0.offset 			ioMachine.iAxisOffset
 net oAxisScale 			scale.1.gain			ioMachine.oAxisScale
 net oAxisOffset			scale.1.offset 			ioMachine.oAxisOffset
 
-net iAxisPositionRaw 	scale.0.in				ioMachine.iAxisPositionRaw
-net oAxisPositionRaw 	scale.1.in				ioMachine.oAxisPositionRaw
+# 6 degrees included angle * 85
+sets iAxisScale			8.93385999758249931348
+# 8 degrees included angle * 80
+sets oAxisScale			11.24326677619131574705
 
+net iAxisPositionRaw 	scale.0.in				ioMachine.iAxisPositionRaw
 net iAxisPosition 		scale.0.out				ioMachine.iAxisPosition
+
+net oAxisPositionRaw 	scale.1.in				ioMachine.oAxisPositionRaw
 net oAxisPosition	 	scale.1.out				ioMachine.oAxisPosition
+
+loadrt pid num_chan=2
+addf pid.0.do-pid-calcs 	master
+addf pid.1.do-pid-calcs 	master
+
+net iAxisEnable			pid.0.enable
+net oAxisEnable 		pid.1.enable
+
+net iAxisCommand 		pid.0.command			ioMachine.iAxisCommand
+net oAxisCommand 		pid.1.command			ioMachine.oAxisCommand
+
+net iAxisPosition 		pid.0.feedback
+net oAxisPosition		pid.1.feedback
+
 
 loadrt mux2 count=2
 addf mux2.0 master
 addf mux2.1 master
+
+net iAxisOutputCommand	mux2.0.out
+net oAxisOutputCommand	mux2.1.out
 
 net iAxisManualCommand	ioMachine.iAxisManualCommand	mux2.0.in0
 net iAxisAutoCommand	pid.0.output					mux2.0.in1
@@ -60,10 +69,13 @@ net iAxisPositionRaw 	emcec.0.1.ain-0-val
 net oAxisPositionRaw 	emcec.0.1.ain-1-val
 
 #EL4032
-net iAxisOutputCommand	emcec.0.2.aout-0-value  mux2.0.out
+#net iAxisOutputCommand	emcec.0.2.aout-0-value  mux2.0.out
+net iAxisOutputCommand	emcec.0.2.aout-0-value
 net iAxisEnable	  		emcec.0.2.aout-0-enable ioMachine.iAxisEnable
+setp emcec.0.2.aout-0-scale -1.0
 
-net oAxisOutputCommand	emcec.0.2.aout-1-value  mux2.1.out
+#net oAxisOutputCommand	emcec.0.2.aout-1-value  mux2.1.out
+net oAxisOutputCommand	emcec.0.2.aout-1-value
 net oAxisEnable 		emcec.0.2.aout-1-enable ioMachine.oAxisEnable
 
 #EL1018
@@ -84,9 +96,9 @@ net stopButton			emcec.0.4.din-1			ioMachine.stopButton
 net cycleStartButton	emcec.0.4.din-2			ioMachine.cycleStartButton
 net lubricantLow		emcec.0.4.din-3
 net pressureFilter		emcec.0.4.din-4
-net eStop				emcec.0.4.din-5
-net lightCurtain		emcec.0.4.din-6
-net inverterFault		emcec.0.4.din-7
+net eStop				emcec.0.4.din-5			ioMachine.eStop
+net lightCurtain		emcec.0.4.din-6-not		ioMachine.lightCurtainInput
+net inverterFault		emcec.0.4.din-7			ioMachine.inverterFault
 
 #EL2008
 
@@ -107,7 +119,8 @@ net spireEngage			emcec.0.6.dout-1		ioMachine.spireEngage
 net latchLiftFrame		emcec.0.6.dout-2		ioMachine.latchLiftFrame
 net spireLube			emcec.0.6.dout-3 		ioMachine.spireLubeAirAssist
 
-
-
 start
-setp ioMachine.requestManual 1
+#setp ioMachine.requestManual 1
+
+source pidSettings.hal
+

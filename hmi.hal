@@ -29,25 +29,25 @@ net manualToggleSpireEngage 	ioMachine.manualToggleSpireEngage	hmi.spireEngageBu
 net		hydraulicsOff 			ioMachine.hydraulicsOff 			hmi.hydraulicsOff
 net		hydraulicSpeed1 		ioMachine.hydraulicSpeed1		 	hmi.hydraulicSpeed1
 net		hydraulicSpeed2 		ioMachine.hydraulicSpeed2 			hmi.hydraulicSpeed2
-net		hydraulicSpeed3 		ioMachine.hydraulicSpeed3 			hmi.hydraulicSpeed3
+net		hydraulicSpeed3 	    ioMachine.hydraulicSpeed3 			hmi.hydraulicSpeed3
 net 	manualHydraulicLoad		ioMachine.manualHydraulicLoad		hmi.hydraulicLoadButton
+net   lubrication           	ioMachine.manualLubrication 		hmi.lubricationButton
 
-net 	oAxisJogSpeed		ioMachine.oJogSpeed					hmi.oJogSpeed
-net 	iAxisJogSpeed		ioMachine.iJogSpeed					hmi.iJogSpeed
+net 	oAxisJogSpeed			ioMachine.oJogSpeed					hmi.oJogSpeed
+net 	iAxisJogSpeed			ioMachine.iJogSpeed					hmi.iJogSpeed
 
-net		iJogPlus			ioMachine.iJogPlus					hmi.iJogPlus
-net		iJogMinus			ioMachine.iJogMinus					hmi.iJogMinus
-net 	oJogPlus			ioMachine.oJogPlus					hmi.oJogPlus
-net		oJogMinus			ioMachine.oJogMinus					hmi.oJogMinus
 
-net 	currentState 				ioMachine.currentState 			hmi.currentState
-net 	requestManual 				ioMachine.requestManual		hmi.requestManual
-net   stateLocked           ioMachine.stateLocked     hmi.stateLocked
-net   requestState          ioMachine.requestState    hmi.requestState
-#net 	cycleStatus					machine.cycleStatus				hmi.cycleStatus
+net		iJogPlus				ioMachine.iJogPlus					hmi.iJogPlus
+net		iJogMinus				ioMachine.iJogMinus					hmi.iJogMinus
+net 	oJogPlus				ioMachine.oJogPlus					hmi.oJogPlus
+net		oJogMinus				ioMachine.oJogMinus					hmi.oJogMinus
+
+net 	currentState 			ioMachine.currentState 				hmi.currentState
+net 	requestManual 			ioMachine.requestManual				hmi.requestManual
+net   	stateLocked           	ioMachine.stateLocked     			hmi.stateLocked
+net   	requestState          	ioMachine.requestState    			hmi.requestState
 
 # calibration data
-
 
 net   calibrationCounter    ioMachine.calibrationCounter  hmi.calibrationCounter
 net   calibrationTimer      ioMachine.calibrationTimerSeconds  hmi.calibrationTimer
@@ -62,8 +62,8 @@ net   oAxisOffset       hmi.oOffset
 net   iAxisScale        hmi.iScale
 net   oAxisScale        hmi.oScale
 
-net   iAxisPosition     hmi.iAxisPosition
-net   oAxisPosition     hmi.oAxisPosition
+net   iAxisPosition     hmi.iPositionText
+net   oAxisPosition     hmi.oPositionText
 
 net startButton     hmi.startButtonLed
 net stopButton      hmi.stopButtonLed

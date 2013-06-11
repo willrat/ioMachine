@@ -66,6 +66,14 @@ STATE_MANUAL = 5
 STATE_CALIBRATION = 10
 
 
+class toolConfigWindow(gtk.Window):
+  def __init__(self, *args, **kwargs):
+    gtk.Window.__init__(self, *args, **kwargs)
+
+  def entryWidgetFocused(self, widget):
+    print "entry widget gained focus; start edit?"
+
+
 class hmi(object):
 
   #
@@ -112,73 +120,15 @@ class hmi(object):
   def on_changeScreenButton_clicked(self, widget, data=None):
     print "on_changeScreenButton_clicked"
     self.window1.show()
-#
-#   def on_viceOpenToggle_toggled(self, widget, data=None):
-#     print "on_viceOpenToggle_toggled"
-#
-#   def on_viceCloseToggle_toggled(self, widget, data=None):
-#     print "on_viceCloseToggle_toggled"
-#
-#   def on_xJogSpeed_value_changed(self, adjustment):
+
+#   def on_addButton_clicked(self, widget, data=None):
 #     pass
 #
-#   def on_yJogSpeed_value_changed(self, adjustment):
+#   def on_removeButton_clicked(self, widget, data=None):
 #     pass
 #
-#   # velocity information used for direction only now
-#   def on_jogZPlus_pressed(self, widget, data=None):
-#     self.jogAxis(0, 75)
-#
-#   def on_jogZPlus_released(self, widget, data=None):
-#     self.jogAxis(0, 0)
-#
-#   def on_jogZMinus_pressed(self, widget, data=None):
-#     self.jogAxis(0, -75)
-#
-#   def on_jogZMinus_released(self, widget, data=None):
-#     self.jogAxis(0, 0)
-#
-#   def on_jogXPlus_pressed(self, widget, data=None):
-#     self.jogAxis(1, 35)
-#
-#   def on_jogXPlus_released(self, widget, data=None):
-#     self.jogAxis(1, 0)
-#
-#   def on_jogXMinus_pressed(self, widget, data=None):
-#     self.jogAxis(1, -35)
-#
-#   def on_jogXMinus_released(self, widget, data=None):
-#     self.jogAxis(1, 0)
-#
-#
-#   # def jogAxis(self, axis, velocity):
-#   def jogAxis(self, axis, velocity):
-#
-#     axisSpeed = 0
-#
-#     if axis == 0:
-#       axisSpeed = self.xJogSpeed.value
-#     elif axis == 1:
-#       axisSpeed = self.yJogSpeed.value
-#
-#     print "axis speed %s" % (axisSpeed)
-#
-#     if velocity == 0:
-#       pass
-#     elif velocity < 0:
-#       velocity = -axisSpeed
-#     else:
-#       velocity = axisSpeed
-
-
-  def on_addButton_clicked(self, widget, data=None):
-    pass
-
-  def on_removeButton_clicked(self, widget, data=None):
-    pass
-
-  def on_editLineButton_clicked(self, widget, data=None):
-    pass
+#   def on_editLineButton_clicked(self, widget, data=None):
+#     pass
 
   def on_operationColumn_clicked(self, widget, data=None):
     print "on operation column clicked"
@@ -188,6 +138,17 @@ class hmi(object):
     print "on position column clicked"
     pass
 
+
+#
+#  tool config
+#
+
+  def entryWidgetFocused(self, widget, userParam):
+    print "entry widget gained focus; start edit?"
+
+#
+#
+#
 
   def onPositionEdit(self, widget, path, text):
     print "on position edit"
@@ -325,6 +286,7 @@ class hmi(object):
 
   def on_startCalibrationButton_clicked(self, widget, data=None):
     try:
+      # TODO: remove hard coded
       h['requestState'] = 18
     except:
       print "Error setting request State"
@@ -497,6 +459,23 @@ class hmi(object):
     self.loadMovesToHalPins()
     self.programDialog.iconify()
 
+  def on_addButton_clicked(self, button):
+    editTree = self.builder2.get_object("currentProgramEditTree")
+
+    if editTree:
+      editTree.show_all()
+    else:
+      print "not found currentProgramEditTree"
+
+    pass
+
+  def on_removeButton_clicked(self, button):
+    editTree = self.builder2.get_object("currentProgramEditTree")
+    if editTree:
+      editTree.hide_all()
+    else:
+      print "not found currentProgramEditTree"
+
   def on_editing_started(self, cellrenderer, editable, path, user_param1=None):
     # print "on editing started"
     self.keyb.getWindow().present()
@@ -542,25 +521,25 @@ class hmi(object):
   #  init etc...
   #
 
-  def buildProgramList(self):
-
-    if not self.listStore:
-      self.listStore = gtk.ListStore(gobject.TYPE_STRING)
-      self.listView.set_model(self.listStore)
-
-    # look up the name of the program from the store and
-    # add to the liststore
-    self.listStore.clear()
-    print "**** Build Program List ****"
-    for entry in self.s.getPrograms():
-
-      print "***** %s *****" % entry.program[0]
-      print entry
-
-      self.listStore.append([entry.program[0]])
-
-    # save the program list
-    self.s.saveState()
+#   def buildProgramList(self):
+#
+#     if not self.listStore:
+#       self.listStore = gtk.ListStore(gobject.TYPE_STRING)
+#       self.listView.set_model(self.listStore)
+#
+#     # look up the name of the program from the store and
+#     # add to the liststore
+#     self.listStore.clear()
+#     print "**** Build Program List ****"
+#     for entry in self.s.getPrograms():
+#
+#       print "***** %s *****" % entry.program[0]
+#       print entry
+#
+#       self.listStore.append([entry.program[0]])
+#
+#     # save the program list
+#     self.s.saveState()
 
   def initGui(self):
     mediumButtonHeight = 60
@@ -611,7 +590,7 @@ class hmi(object):
         # print "Button : %s " % item.get_label()
         item.set_size_request(225, largeButtonHeight)
 
-    airJogButtons = self.builder.get_object("airControlButtons")
+    airJogButtons = self.builder.get_object("manualButtons")
     for item in airJogButtons:
       if type(item) == gtk.Button or type(item) == gladevcp.HAL_ToggleButton:
         item.set_size_request(200, largeButtonHeight)
@@ -656,6 +635,11 @@ class hmi(object):
 
     # use the edit store
     self.currentProgramDisplayTree.set_model(self.programEditListStore)
+
+    # self.toolConfigDialog = toolConfigWindow()
+    self.toolConfigDialog = self.builder2.get_object("toolConfigDialog")
+    self.toolConfigDialog.present()
+
 
   def initKeyboard(self):
     self.keyb = touchKeyboard()
@@ -732,32 +716,8 @@ class hmi(object):
       self.connectHalPins()
 
     self.currentProgram = ioProgram()
-
+    self.currentProgram.fillListStore(self.programEditListStore)
     self.loadMovesToHalPins()
-
-#    self.s = storable()
-#    self.s.loadState()
-
-#    self.programs = self.s.getPrograms()
-#    self.setCurrent(self.s.currentIndex)
-
-    # go through programs and update if needed in case a new parameter
-#    for program in self.programs:
-#      self.currentProgramStore.clear()
-#      program.fillListStore(self.currentProgramStore)
-#      program.updateFromlistStore(self.currentProgramStore)
-
-#    self.buildProgramList()
-
-
-    # load the current program
-#    self.createProgram()
-#    self.loadMotionControlProgram()
-#    self.loadCurrent()
-
-    # fill the list store based on the current program
-#   self.currentProgram.fillListStore(self.currentProgramStore)
-    # self.fillLists()
 
     # udpate display and button states, polling  etc
     gobject.timeout_add(110, self.cyclicUpdate)

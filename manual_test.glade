@@ -29,6 +29,12 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="programsListStore">
+    <columns>
+      <!-- column-name Program Name -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkWindow" id="window1">
     <property name="window_position">center-always</property>
     <property name="default_width">1024</property>
@@ -41,16 +47,13 @@
           <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
             <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkLabel" id="statusLabel">
-                <property name="width_request">750</property>
+                <property name="width_request">650</property>
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">STATUS: etc etc</property>
               </object>
               <packing>
-                <property name="position">1</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -81,8 +84,47 @@
                 </child>
               </object>
               <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHButtonBox" id="hbuttonbox18">
+                <property name="visible">True</property>
+                <property name="layout_style">center</property>
+                <child>
+                  <object class="GtkLabel" id="label35">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">LIGHT CURTAIN</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="HAL_LED" id="lightCurtainStatusLed">
+                    <property name="visible">True</property>
+                    <property name="led_blink_rate">0</property>
+                    <property name="led_size">15</property>
+                    <property name="pick_color_on">#080dffff0000</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
                 <property name="position">2</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>
@@ -134,6 +176,7 @@
                           <object class="HAL_Label" id="iPositionText">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">label</property>
+                            <property name="text_template">%2.2f</property>
                             <property name="label_pin_type">1</property>
                           </object>
                           <packing>
@@ -157,7 +200,7 @@
                           <object class="HAL_Label" id="oPositionText">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">label</property>
-                            <property name="text_template">{100.2}</property>
+                            <property name="text_template">%2.2f</property>
                             <property name="label_pin_type">1</property>
                           </object>
                           <packing>
@@ -576,21 +619,17 @@
                         <property name="visible">True</property>
                         <property name="left_padding">12</property>
                         <child>
-                          <object class="GtkHButtonBox" id="airControlButtons">
+                          <object class="GtkTable" id="manualButtons">
                             <property name="visible">True</property>
-                            <property name="layout_style">spread</property>
+                            <property name="n_rows">3</property>
+                            <property name="n_columns">3</property>
                             <child>
                               <object class="HAL_ToggleButton" id="liftEngageButton">
-                                <property name="label" translatable="yes">Lift Engage</property>
+                                <property name="label" translatable="yes">Lift Part</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                               </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">0</property>
-                              </packing>
                             </child>
                             <child>
                               <object class="HAL_ToggleButton" id="spireEngageButton">
@@ -600,10 +639,23 @@
                                 <property name="receives_default">True</property>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">1</property>
+                                <property name="left_attach">2</property>
+                                <property name="right_attach">3</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
                               </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                             <child>
                               <object class="HAL_ToggleButton" id="latchEngageButton">
@@ -613,9 +665,10 @@
                                 <property name="receives_default">True</property>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">2</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
                               </packing>
                             </child>
                             <child>
@@ -626,9 +679,23 @@
                                 <property name="receives_default">True</property>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">3</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="HAL_ToggleButton" id="lubricationButton">
+                                <property name="label" translatable="yes">Lubrication</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="yalign">0.52999997138977051</property>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                                <property name="bottom_attach">3</property>
                               </packing>
                             </child>
                           </object>
@@ -726,6 +793,7 @@
                       <object class="GtkTreeView" id="treeview1">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="model">programsListStore</property>
                         <property name="headers_clickable">False</property>
                         <property name="search_column">1</property>
                         <property name="enable_grid_lines">horizontal</property>

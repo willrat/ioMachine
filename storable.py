@@ -1,26 +1,27 @@
 #
 #
-# things we want to pickle
+# data store
 
-#from motionProgram import motionProgram
+# from motionProgram import motionProgram
 
 import pickle
 
-FILENAME = "./machinePrograms.pkl"
+FILENAME = "./machineSettings.pkl"
 
 class storable():
 
   def __init__(self):
     # create store for all programs on the 'hmi'
     self.programs = []
-#   
-    # create 1 default program so there is never an empty list  
+#
+    # create 1 default program so there is never an empty list
    # self.programs.append(motionProgram())
 
     # plus other things we might need to keep
     # track here....
     self.currentIndex = 0
     self.language = ""
+
 
   def remove(self, index):
     pass
