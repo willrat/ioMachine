@@ -71,7 +71,7 @@ class toolConfigWindow(gtk.Window):
     gtk.Window.__init__(self, *args, **kwargs)
 
   def entryWidgetFocused(self, widget):
-    print "entry widget gained focus; start edit?"
+    print "entry widget gained focus; start edit? DOSOS"
 
 
 class hmi(object):
@@ -769,6 +769,7 @@ if __name__ == "__main__":
 
   try:
     app = hmi()
+    store = storable()
     gtk.main()
   except KeyboardInterrupt:
     raise SystemExit

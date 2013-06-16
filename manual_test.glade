@@ -31,7 +31,7 @@
   </object>
   <object class="GtkListStore" id="programsListStore">
     <columns>
-      <!-- column-name Program Name -->
+      <!-- column-name Program -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -105,9 +105,9 @@
                 <child>
                   <object class="HAL_LED" id="lightCurtainStatusLed">
                     <property name="visible">True</property>
-                    <property name="led_blink_rate">0</property>
-                    <property name="led_size">15</property>
                     <property name="pick_color_on">#080dffff0000</property>
+                    <property name="led_size">15</property>
+                    <property name="led_blink_rate">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -452,7 +452,6 @@
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
-                                    <property name="fill">False</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -475,7 +474,6 @@
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
-                                    <property name="fill">False</property>
                                     <property name="position">3</property>
                                   </packing>
                                 </child>
@@ -646,18 +644,6 @@
                               </packing>
                             </child>
                             <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
                               <object class="HAL_ToggleButton" id="latchEngageButton">
                                 <property name="label" translatable="yes">Latch Engage</property>
                                 <property name="visible">True</property>
@@ -697,6 +683,18 @@
                                 <property name="top_attach">2</property>
                                 <property name="bottom_attach">3</property>
                               </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                           </object>
                         </child>

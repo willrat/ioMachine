@@ -1,0 +1,25 @@
+# test pid loop by setting values
+
+setp pid.0.Pgain 		0.95
+setp pid.0.Igain 		0.25
+setp pid.0.Dgain 		0.01
+
+setp pid.1.Pgain 		0.95
+setp pid.1.Igain 		0.25
+setp pid.1.Dgain 		0.01
+
+show pin ioMachine.motionCounter
+show pin ioMachine.currentOperation
+show pin ioMachine.currentTarget
+show pin ioMachine.currentError
+show pin ioMachine.currentPosition
+
+#show sig oAxisEnablePid
+show pin pid.1.Pgain
+show pin pid.1.Igain
+show sig oAxisCommand
+show sig oAxisOutputCommand
+
+
+
+

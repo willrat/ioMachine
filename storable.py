@@ -5,6 +5,8 @@
 # from motionProgram import motionProgram
 
 import pickle
+import hal
+# from ioProgram import *
 
 FILENAME = "./machineSettings.pkl"
 
@@ -22,6 +24,14 @@ class storable():
     self.currentIndex = 0
     self.language = ""
 
+    self.halComp = hal.component("persistent")
+
+    self.halComp.newpin("axis.0.gain", hal.HAL_FLOAT, hal.HAL_IO)
+    self.halComp.newpin("axis.0.offset", hal.HAL_FLOAT, hal.HAL_IO)
+
+    self.halComp.newpin("axis.1.gain", hal.HAL_FLOAT, hal.HAL_IO)
+    self.halComp.newpin("axis.1.offset", hal.HAL_FLOAT, hal.HAL_IO)
+    self.halComp.ready()
 
   def remove(self, index):
     pass

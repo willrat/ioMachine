@@ -38,10 +38,10 @@ pin in bit          inverterFault;
 
 // EL2008 - slave
 pin out bit			lubricationPump;
-pin out bit			inverterEnable;
-pin out bit			inverterSpeedBit1;
-pin out bit			inverterSpeedBit2;
-pin out bit			hydraulicLoad;
+//pin out bit			inverterEnable;
+//pin out bit			inverterSpeedBit1;
+//pin out bit			inverterSpeedBit2;
+//pin out bit			hydraulicLoad;
 
 // EL2024 - slave
 pin out bit 		partLiftRam;
@@ -50,7 +50,8 @@ pin out bit 		latchLiftFrame;
 pin out bit 		spireLubeAirAssist;
 
 
-// io for positions
+// TODO: remove
+// positions
 pin out float 		oAxisCommand;
 pin in float		oAxisPosition;
 pin in float		oAxisPositionRaw;
@@ -61,10 +62,10 @@ pin out float 		iAxisCommand;
 pin in float		iAxisPosition;
 pin in float		iAxisPositionRaw;
 pin out bit			iAxisEnable;
-pin out bit			iAxisEnablePid; //
+pin out bit			iAxisEnablePid;
 
 
-
+// TODO: remove most of these
 // manual and calibration
 
 pin out float		iAxisManualCommand;
@@ -82,8 +83,10 @@ pin in bit			hydraulicSpeed2;
 pin in bit			hydraulicSpeed3;
 pin in bit			manualHydraulicLoad;
 
-pin out signed		hydraulicSpeed;
+pin in signed		hydraulicSpeed;
 pin io signed		requestHydraulicSpeed;
+pin io bit			requestHydraulicLoad;
+pin in bit			hydraulicLoad;
 
 
 pin in float		iJogSpeed;
@@ -93,32 +96,38 @@ pin in bit			iJogMinus;
 pin in bit 			oJogPlus;
 pin in bit			oJogMinus;
 
+// new manual connections
+pin out bit			manualEnabled;
+pin out bit			calibrationEnabled;
+
+
 // hmi etc
 //pin in bit          startEdge;
+
+/*
+ *
+ */
+
 
 pin in float        cycleTimeOut;
 pin in float        readyTimeOut;
 
 
-
+pin out signed		lubricationCounter "current number of cycles since lub";
+pin in float		lubricationTime = 2.0 "period for lub pump motor";
+param rw unsigned	lubricationCycleCounter = 25 "number of cycles between lubrications";
+pin out bit 		lubricationEnabled = true "flag to disable";
 
 pin out float       lastCycle;
 
-// pin and variables
+// to from HMI / frontend
 pin out u32         currentState;          // for display in hmi
-
-
 pin in bit          requestManual;
 pin io signed		requestState;
 pin out bit         stateLocked;
 
 pin out float       readyTimerSeconds;
 
-// parameters
-pin out signed		lubricationCounter; 		// current count of cycles
-pin in float		lubricationTime; 			// time the lubrication is on for
-param rw unsigned	lubricationCycleCounter; 	// number of cycles between lubrications
-pin out bit 		lubricationEnabled;
 
 
 //position for tool release
@@ -227,84 +236,33 @@ static float to_seconds(struct __comp_state *__comp_inst, long long nanoseconds)
     return ((float)nanoseconds) * 0.000000001;
 }
 
-static void hydraulic_state_machine(struct __comp_state *__comp_inst){
 
-	if (hydraulicTimer > 0)
-		hydraulicTimer -= gPeriod;
+static void lubrication_process(struct __comp_state *__comp_inst){
 
-	// requested faster speed
-	if (requestHydraulicSpeed > hydraulicSpeed && hydraulicTimer <= 0){
-		hydraulicSpeed++;
-		hydraulicTimer = to_nanoseconds(__comp_inst, 0.5);
-	}
-
-	if (requestHydraulicSpeed < hydraulicSpeed)
-		hydraulicSpeed--;
-
-	switch (hydraulicSpeed){
-	case 0:
-		inverterEnable = false;
-		inverterSpeedBit1 = false;
-		inverterSpeedBit2 = false;
-		hydraulicLoad = false;
-		break;
-	case 1:
-		inverterEnable = true;
-		inverterSpeedBit1 = true;
-		inverterSpeedBit2 = false;
-		hydraulicLoad = false;
-		break;
-	case 2:
-		inverterEnable = true;
-		inverterSpeedBit1 = false;
-		inverterSpeedBit2 = true;
-		break;
-	case 3:
-		inverterEnable = true;
-		inverterSpeedBit1 = true;
-		inverterSpeedBit2 = true;
-		break;
-	}
-}
-
-static void lubrication_state_machine(struct __comp_state *__comp_inst){
-
-	// parameters
-	//pin out signed		lubricationCounter;
-	//pin in float		lubricationTime;
-	//param rw unsigned	lubricationCycleCounter;
-
-	// reduce lubrication timer
-	//long long lubricationTimer;
 	if (lubricationEnabled)	{
-		lubricationTimer -= gPeriod;
+		if (lubricationCounter == lubricationCycleCounter)
+		{
+			lubricationPump = true;
+			lubricationTimer = to_nanoseconds(__comp_inst, lubricationTime);
+			lubricationCounter = 0;
+		}
 
-		if (lubricationTimer <= 0){
-			// turn off pump
-			lubricationEnabled = false;
+		if (lubricationPump){
+			lubricationTimer -= gPeriod;
+			if (lubricationTimer <= 0){
+				lubricationPump = false;
+				spireLubeAirAssist = true;
+				lubricationTimer = to_nanoseconds(__comp_inst, lubricationTime);
+			}
+		}
+
+		if (spireLubeAirAssist){
+			lubricationTimer -= gPeriod;
+			if (lubricationTimer <= 0){
+				spireLubeAirAssist = false;
+			}
 		}
 	}
-
-	// turn on / off lubrication pump
-
-
-	//
-}
-
-static void set_hydraulic_load(struct __comp_state *__comp_inst, bool on){
-	if (on && hydraulicSpeed > 1){
-		hydraulicLoad = true;
-	} else {
-		hydraulicLoad = false;
-	}
-}
-
-static void set_hydraulic_speed(struct __comp_state *__comp_inst, int speed){
-
-	if (speed > 3)
-		speed = 3;
-
-	requestHydraulicSpeed = speed;
 }
 
 /*
@@ -341,7 +299,7 @@ static void state_standby(struct __comp_state *__comp_inst){
         spireEngage = true;
         latchLiftFrame = true;
 
-        set_hydraulic_speed(__comp_inst, 0);
+        requestHydraulicSpeed = 0;//set_hydraulic_speed(__comp_inst, 0);
     }
 
 
@@ -366,7 +324,7 @@ static void state_prepareready(struct __comp_state *__comp_inst){
 	if (state_entry){
         state_entry = false;
         prepareReadyCounter = 0;
-        set_hydraulic_speed(__comp_inst, 1);
+        requestHydraulicSpeed = 1;
     }
 
     // TODO:  reinstate please
@@ -381,10 +339,12 @@ static void state_prepareready(struct __comp_state *__comp_inst){
     		prepareReadyCounter++;
     	break;
     case 1:
-    	set_hydraulic_speed(__comp_inst, 2);
+    	requestHydraulicSpeed = 2;
+    	//set_hydraulic_speed(__comp_inst, 2);
     	if (hydraulicSpeed == 2){
     		prepareReadyCounter++;
-    		set_hydraulic_load(__comp_inst, true);
+    		requestHydraulicLoad = true;
+    		//set_hydraulic_load(__comp_inst, true);
     	}
     	break;
     case 2:
@@ -398,8 +358,10 @@ static void state_prepareready(struct __comp_state *__comp_inst){
     		// start the ram lifting
     		partLiftRam = true;
     		// TODO: turn off hyd.
-    		set_hydraulic_speed(__comp_inst, 1);
-    		set_hydraulic_load(__comp_inst, false);
+    		//set_hydraulic_speed(__comp_inst, 1);
+    		requestHydraulicSpeed = 1;
+    		//set_hydraulic_load(__comp_inst, false);
+    		requestHydraulicLoad = false;
 
     		// TODO: remove
     		change_state(__comp_inst, STATE_READY);
@@ -433,7 +395,8 @@ static void state_prepareready(struct __comp_state *__comp_inst){
 static void state_ready(struct __comp_state *__comp_inst){
     if (state_entry){
         state_entry = false;
-        set_hydraulic_speed(__comp_inst, 1);
+        //set_hydraulic_speed(__comp_inst, 1);
+        requestHydraulicSpeed = 1;
         readyTimer = to_nanoseconds(__comp_inst, readyTimeOut);
 
         // set a default if 0
@@ -512,7 +475,8 @@ static void state_lowerpart(struct __comp_state *__comp_inst){
     if (state_entry){
         state_entry = false;
         partLiftRam = false;
-        set_hydraulic_speed(__comp_inst, 2);
+        requestHydraulicSpeed = 2;
+
     }
 
     if (liftRamDown && hydraulicSpeed == 2){
@@ -558,7 +522,9 @@ static void state_motion(struct __comp_state *__comp_inst){
         currentPosition = 0.0;
         motionCounter = 0;
         lastOperation = false;
-        set_hydraulic_load(__comp_inst, true);
+        requestHydraulicLoad = true;
+
+        lubricationCounter++;
     }
 
     cycleTimer -= gPeriod;
@@ -568,7 +534,8 @@ static void state_motion(struct __comp_state *__comp_inst){
     case 0: // init
     	iAxisEnable = false;
     	oAxisEnable = false;
-    	motionCounter = 1;
+    	if (hydraulicLoad)
+    		motionCounter = 1;
     	break;
 
     case 1: // read new move
@@ -634,7 +601,8 @@ static void state_motion(struct __comp_state *__comp_inst){
     	oAxisEnable = false;
     	iAxisEnablePid = false;
     	oAxisEnablePid = false;
-    	hydraulicLoad = false;
+    	//hydraulicLoad = false;
+    	requestHydraulicLoad = false;
 
     	change_state(__comp_inst, STATE_FINALISE);
     }
@@ -652,6 +620,21 @@ static void state_finalise(struct __comp_state *__comp_inst){
 static void state_calibrate(struct __comp_state *__comp_inst){
 
 	bool exit = false;
+	if (state_entry){
+		state_entry = false;
+		stateLocked = true;
+
+	}
+
+	if (exit){
+		stateLocked = false;
+		change_state(__comp_inst, STATE_STANDBY);
+	}
+}
+
+static void state_calibrate2(struct __comp_state *__comp_inst){
+
+	bool exit = false;
 
 	if (state_entry){
 		state_entry = false;
@@ -666,7 +649,8 @@ static void state_calibrate(struct __comp_state *__comp_inst){
 		calibrationTimer = to_nanoseconds(__comp_inst, 1.0);
 		calibrationCounter = 0;
 
-		set_hydraulic_speed(__comp_inst, 2);
+		//set_hydraulic_speed(__comp_inst, 2);
+		requestHydraulicSpeed = 2;
 
 		iAxisEnable = true;
 		oAxisEnable = true;
@@ -680,7 +664,8 @@ static void state_calibrate(struct __comp_state *__comp_inst){
 
 		if (hydraulicSpeed == 2){
 			//set_hydraulic_load(__comp_inst, true);
-			hydraulicLoad = true;
+			//hydraulicLoad = true;
+			requestHydraulicLoad = true;
 			calibrationTimer = to_nanoseconds(__comp_inst, 0.15);
 			calibrationCounter++;
 		}
@@ -728,10 +713,11 @@ static void state_calibrate(struct __comp_state *__comp_inst){
 
 	if (exit || stopButton){
 		stateLocked = false;
-		hydraulicLoad = false;
+		requestHydraulicLoad = false;
 		iAxisEnable = false;
 		oAxisEnable = false;
-		set_hydraulic_speed(__comp_inst, 0);
+		//set_hydraulic_speed(__comp_inst, 0);
+		requestHydraulicSpeed = 0;
 		change_state(__comp_inst, STATE_STANDBY);
 	}
 }
@@ -739,42 +725,75 @@ static void state_calibrate(struct __comp_state *__comp_inst){
 static void state_manual(struct __comp_state *__comp_inst){
     bool exit = false;
 
+    //pin out bit			manualEnabled;
+    //pin out bit			calibrationEnabled;
+
     if (state_entry){
         state_entry = false;
         //enableManual = 1;
-        inverterEnable = false;
+        //inverterEnable = false;
+        manualEnabled = true;
     }
 
-    if (startButton && !eStop){
-        //hydraulicMotor = 1;
-        return;
-    } else if (stopButton){
-        //hydraulicMotor = 0;
-        return;
-    } else if (eStop) {
-        //hydraulicMotor = 0;
-        return;
-    }
+//    if (startButton && !eStop){
+//        //hydraulicMotor = 1;
+//        return;
+//    } else if (stopButton){
+//        //hydraulicMotor = 0;
+//        return;
+//    } else if (eStop) {
+//        //hydraulicMotor = 0;
+//        return;
+//    }
 
-    if (iJogPlus){
-    	iAxisEnable = true;
-    	iAxisManualCommand = iJogSpeed;
-    } else if (iJogMinus) {
-    	iAxisEnable = true;
-    	iAxisManualCommand = -iJogSpeed;
+    if (hydraulicSpeed > 1) {
+
+		if (iJogPlus){
+			iAxisEnable = true;
+			iAxisManualCommand = iJogSpeed;
+			//hydraulicLoad = true;
+			requestHydraulicLoad = true;
+		} else if (iJogMinus) {
+			iAxisEnable = true;
+			iAxisManualCommand = -iJogSpeed;
+			//hydraulicLoad = true;
+			requestHydraulicLoad = true;
+		} else {
+			iAxisEnable = false;
+			//hydraulicLoad = false;
+			requestHydraulicLoad = false;
+		}
+
+		if (oJogPlus){
+			oAxisEnable = true;
+			oAxisManualCommand = oJogSpeed;
+			requestHydraulicLoad = true;
+			//hydraulicLoad = true;
+		} else if (oJogMinus) {
+			oAxisEnable = true;
+			oAxisManualCommand = -oJogSpeed;
+			requestHydraulicLoad = true;
+			//hydraulicLoad = true;
+		} else {
+			oAxisEnable = false;
+			//hydraulicLoad = false;
+			requestHydraulicLoad = false;
+		}
+
     } else {
     	iAxisEnable = false;
+    	oAxisEnable = false;
+    	oAxisCommand = 0.0;
+    	iAxisCommand = 0.0;
+    	//hydraulicLoad = false;
+    	requestHydraulicLoad = false;
     }
 
-    if (oJogPlus){
-    	oAxisEnable = true;
-    	oAxisManualCommand = oJogSpeed;
-    } else if (oJogMinus) {
-    	oAxisEnable = true;
-    	oAxisManualCommand = -oJogSpeed;
-    } else {
-    	oAxisEnable = false;
-    }
+    //    if (manualHydraulicLoad && !hydraulicsOff) {
+    //    	hydraulicLoad = true;
+    //    } else {
+    //    	hydraulicLoad = false;
+    //    }
 
     if (manualTogglePartUp){
     	// TODO: if outer-ring is not at top
@@ -795,6 +814,7 @@ static void state_manual(struct __comp_state *__comp_inst){
     	latchLiftFrame = false;
     }
 
+    // TODO: && check float switch
     if (manualLubrication){
         lubricationPump = true;
     } else {
@@ -802,26 +822,26 @@ static void state_manual(struct __comp_state *__comp_inst){
     }
 
 
-    if (manualHydraulicLoad && !hydraulicsOff) {
-    	hydraulicLoad = true;
-    } else {
-    	hydraulicLoad = false;
-    }
+
 
     if (hydraulicsOff) {
-    	set_hydraulic_speed(__comp_inst, 0);
-    	hydraulicLoad = false;
+    	//set_hydraulic_speed(__comp_inst, 0);
+    	requestHydraulicSpeed = 0;
+    	//hydraulicLoad = false;
     }
 
     if (hydraulicSpeed1) {
-    	set_hydraulic_speed(__comp_inst, 1);
-    	hydraulicLoad = false;
+    	//set_hydraulic_speed(__comp_inst, 1);
+    	//hydraulicLoad = false;
+    	requestHydraulicSpeed = 1;
     }
     if (hydraulicSpeed2) {
-    	set_hydraulic_speed(__comp_inst, 2);
+    	//set_hydraulic_speed(__comp_inst, 2);
+    	requestHydraulicSpeed = 2;
     }
     if (hydraulicSpeed3) {
-    	set_hydraulic_speed(__comp_inst, 3);
+    	//set_hydraulic_speed(__comp_inst, 3);
+    	requestHydraulicSpeed = 3;
     }
 
     if (!requestManual){
@@ -830,6 +850,7 @@ static void state_manual(struct __comp_state *__comp_inst){
 
     if (exit){
     	change_state(__comp_inst, STATE_STANDBY);
+    	manualEnabled = false;
     }
 }
 
@@ -878,9 +899,7 @@ FUNCTION(_) {
 //    if (eStop)
 //    	change_state(__comp_inst, STATE_ESTOP);
 
-    // process hydraulics
-    hydraulic_state_machine(__comp_inst);
-    lubrication_state_machine(__comp_inst);
+    lubrication_process(__comp_inst);
     
     // switch on state
     switch (currentState)

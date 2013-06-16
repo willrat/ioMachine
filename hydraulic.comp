@@ -1,0 +1,87 @@
+component hydraulic;
+
+description 
+"""
+
+""";
+ 
+author "";
+
+license "GPL";
+
+option singleton yes;
+
+
+pin out bit			inverterEnable;
+pin out bit			inverterSpeedBit1;
+pin out bit			inverterSpeedBit2;
+pin out bit			hydraulicLoad;
+
+pin out signed		hydraulicSpeed;
+pin io signed		requestHydraulicSpeed;
+pin io bit			requestHydraulicLoad;
+
+function _;
+
+;;
+
+//#define NANO_IN_SECONDS  (1000000000);
+
+long long hydraulicTimer;
+
+
+#include "rtapi_math.h"
+
+FUNCTION(_) {
+
+
+	if (hydraulicTimer > 0)
+		hydraulicTimer -= period;
+
+	if (hydraulicSpeed > 3){
+		hydraulicSpeed = 3;
+	}
+
+	// requested faster speed
+	if (requestHydraulicSpeed > hydraulicSpeed && hydraulicTimer <= 0){
+		hydraulicSpeed++;
+		// half a second
+		hydraulicTimer = 200000000;
+		//hydraulicTimer = 0.2 * NANO_IN_SECONDS();
+	}
+
+	if (requestHydraulicLoad && hydraulicTimer <= 0	&& hydraulicSpeed > 1 ) {
+		hydraulicLoad = true;
+	} else if (requestHydraulicLoad == false) {
+		hydraulicLoad = false;
+	}
+
+	if (requestHydraulicSpeed < hydraulicSpeed)
+		hydraulicSpeed--;
+
+	switch (hydraulicSpeed){
+	case 0:
+		inverterEnable = false;
+		inverterSpeedBit1 = false;
+		inverterSpeedBit2 = false;
+		hydraulicLoad = false;
+		break;
+	case 1:
+		inverterEnable = true;
+		inverterSpeedBit1 = true;
+		inverterSpeedBit2 = false;
+		hydraulicLoad = false;
+		break;
+	case 2:
+		inverterEnable = true;
+		inverterSpeedBit1 = false;
+		inverterSpeedBit2 = true;
+		break;
+	case 3:
+		inverterEnable = true;
+		inverterSpeedBit1 = true;
+		inverterSpeedBit2 = true;
+		break;
+	}
+}
+

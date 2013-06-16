@@ -1,0 +1,284 @@
+component hMotion ;
+
+description 
+"""
+Motion Handler
+
+"""; 
+author "";
+license "GPL";
+
+//option singleton yes;
+
+
+pin out float 		axisCommand "command to servo";
+pin in float		positionInput "raw position from transducer 0..1";
+pin in float 		command "position command";
+pin out float		position "scaled position";
+pin out bit			inPosition = false;
+
+pin in float		pidInput "value from pid control";
+pin out bit			axisEnable "enable for axis";
+
+pin in bit 			manual "request manual mode";
+pin in signed		jog "-100 0 +100 jog command range";
+
+// position scaling
+pin io float		offset "axis offset in output units";
+pin io float		gain "gain factor";
+
+// further scaling for tool.. relative position
+pin io float		toolGain;
+pin out float		toolOffset;
+pin out float		toolPosition;
+//pin in float		mandrelTaper;
+pin in float		diameterAtPosition; //uses current position
+pin io bit			updateTool;
+
+
+
+// calibration pins
+pin out float		calibrationTimerSeconds "seconds to go to next fsm state";
+pin out signed		calibrationCounter "counter to show the state fsm in calibration routine";
+pin in bit			calibrate "command start calibrate";
+pin out bit			isCalibrating "busy";
+pin out bit			isCalibrationDone "done";
+pin out float		calibrationTop "internal for calibration";
+pin out float		calibrationBottom "internal for calibration";
+pin in float		ramStroke = 80;
+
+// connections to hydraulic system
+pin io signed		requestHydraulicSpeed;
+pin in signed		hydraulicSpeed;
+pin io bit			requestHydraulicLoad;
+pin in bit			hydraulicLoad;
+
+
+// relating to the motion state
+//pin out signed		motionCounter;
+//pin out unsigned	currentOperation;
+//pin out float 		currentTarget;
+//pin out float 		currentError;
+//pin out float 		currentPosition;
+
+pin in float		deadband = 0.01 "to determine in position";
+
+// Global Variables
+variable double 	totalnsec;
+variable int 		old_start;
+variable long 		gPeriod;
+
+function _;
+
+;;
+
+#include "rtapi_math.h"
+
+
+bool state_entry = true;
+long long calibrationTimer;
+
+static void state_motion(struct __comp_state *__comp_inst){
+
+//    bool exit = false;
+//
+//    if (state_entry){
+//        state_entry = false;
+//        // with a 25 second time-out
+//        cycleTimer = to_nanoseconds(__comp_inst, cycleTimeOut);
+//
+//        // set a default if 0
+//        if (cycleTimer <= 0.0)
+//            cycleTimer = to_nanoseconds(__comp_inst, 120.0);
+//
+//        currentOperation = 0;
+//        iAxisEnablePid = true;
+//        oAxisEnablePid = true;
+//        currentTarget = 0.0;
+//        currentError = 1000.0;
+//        currentPosition = 0.0;
+//        motionCounter = 0;
+//        lastOperation = false;
+//        set_hydraulic_load(__comp_inst, true);
+//    }
+//
+//    cycleTimer -= gPeriod;
+//
+//    switch (motionCounter) {
+//
+//    case 0: // init
+//    	iAxisEnable = false;
+//    	oAxisEnable = false;
+//    	motionCounter = 1;
+//    	break;
+//
+//    case 1: // read new move
+//
+//    	switch (operationType(currentOperation)){
+//		case 0:
+//			// I operation
+//			iAxisEnable = true;
+//			iAxisCommand = position(currentOperation);
+//			break;
+//		case 1:
+//		case -1:
+//			oAxisEnable = true;
+//			oAxisCommand = position(currentOperation);
+//			break;
+//		}
+//    	motionCounter++;
+//    	break;
+//
+//    case 2:
+//
+//    	switch (operationType(currentOperation)){
+//    	case 0:
+//    		currentPosition = iposition;
+//    		break;
+//    	case -1:
+//    	case 1:
+//    		currentPosition = oposition;
+//    		break;
+//    	}
+//
+//    	currentTarget = position(currentOperation);
+//		currentError = fabs(currentPosition - currentTarget);
+//
+//		if (currentError < deadband) {
+//			if (operationType(currentOperation) == -1){
+//				motionCounter = 3;
+//			} else {
+//				motionCounter = 0;
+//				currentOperation++;
+//			}
+//		}
+//
+//    	break;
+//
+//    case 3: // exit code
+//    	exit = true;
+//    	break;
+//    }
+//
+//    // cycle did not complete in time
+//    if (cycleTimer <= 0.0) {
+//    	exit = true;
+//    }
+//
+//    // cycle aborted
+//    if (stopButton) {
+//    	exit = true;
+//    }
+//
+//    if (exit){
+//    	iAxisEnable = false;
+//    	oAxisEnable = false;
+//    	iAxisEnablePid = false;
+//    	oAxisEnablePid = false;
+//    	hydraulicLoad = false;
+//
+//    	change_state(__comp_inst, STATE_FINALISE);
+//    }
+
+}
+
+
+static void calibrate_process(struct __comp_state *__comp_inst){
+
+	if (!isCalibrating){
+		isCalibrating = true;
+		calibrationTop = 0.0;
+		calibrationBottom = 0.0;
+		axisCommand = 0.0;
+		calibrationCounter = 0;
+		requestHydraulicSpeed = 2;
+		requestHydraulicLoad = true;
+		axisEnable = true;
+	}
+
+	calibrationTimer -= gPeriod;
+
+	switch (calibrationCounter){
+	case 0:
+		if (hydraulicLoad){
+			//calibrationTimer = to_nanoseconds(__comp_inst, 0.15);
+			calibrationTimer = 150000000;
+			calibrationCounter++;
+		}
+		break;
+	case 1:
+		// move to top of stroke in 7 seconds
+		if (calibrationTimer <= 0){
+			calibrationTimer = 7000000000;//to_nanoseconds(__comp_inst, 7.0);
+			axisCommand = 1.0;
+			calibrationCounter++;
+		}
+		break;
+	case 2:
+		// record top position move to bottom
+		if (calibrationTimer <= 0){
+			calibrationTimer = 7000000000;//to_nanoseconds(__comp_inst, 7.0);
+			calibrationTop = positionInput;
+			axisCommand = -1.0;
+			calibrationCounter++;
+		}
+		break;
+	case 3:
+		if (calibrationTimer <= 0){
+			calibrationBottom = positionInput;
+			axisCommand = 0.0;
+			gain = ramStroke / fabs(calibrationTop-calibrationBottom);
+			offset = calibrationTop * gain;
+			isCalibrationDone = true;
+			requestHydraulicSpeed = 2;
+			requestHydraulicLoad = false;
+		}
+		break;
+	}
+}
+
+
+FUNCTION(_) {
+
+	// do scaling
+	position = (positionInput * gain) + offset;
+
+	if (updateTool){
+		//toolGain = gain * (float)tan((mandrelTaper)*(180.0/3.14159));
+		//toolOffset = diameterAtPosition-position;
+		updateTool = false;
+	}
+
+	toolPosition = (position * toolGain) + toolOffset;
+
+	if ((manual && calibrate) || isCalibrating){
+		calibrate_process(__comp_inst);
+		return;
+	}
+
+	if (manual && !calibrate){
+		if (jog != 0){
+			requestHydraulicLoad = true;
+			if (hydraulicLoad){
+				axisCommand = ((float)jog)/100;
+				axisEnable = true;
+			}
+		} else {
+			axisEnable = false;
+			axisCommand = 0.0;
+			requestHydraulicLoad = false;
+		}
+
+	} else {
+		// do motion command
+		if (fabs(command-position) < deadband){
+			inPosition = true;
+		} else {
+			inPosition = false;
+			axisEnable = true;
+			axisCommand = pidInput;
+		}
+	}
+}
+
+
